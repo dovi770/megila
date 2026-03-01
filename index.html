@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>קול המגילה - הכנה למבצעים</title>
+    <title>קול קורא המגילה</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
     
@@ -15,7 +15,7 @@
             --text-color: #1a1a1a;
             --playing-bg: rgba(11, 28, 44, 0.08);
             --bottom-bar-height: 110px;
-            --katan-color: #b22222; /* צבע לקמץ קטן */
+            --katan-color: #b22222;
         }
 
         @font-face {
@@ -30,7 +30,24 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             padding-bottom: var(--bottom-bar-height);
+            overflow-x: hidden;
         }
+
+        /* מסך פתיחה */
+        #welcomeOverlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: var(--primary-color); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; text-align: center; transition: opacity 0.5s;
+        }
+        #welcomeOverlay h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 3.5rem; margin-bottom: 10px; }
+        #welcomeOverlay p { font-size: 1.2rem; color: var(--accent-color); margin-bottom: 30px; }
+        .welcome-btns { display: flex; gap: 20px; }
+        .welcome-btn {
+            background: var(--accent-color); color: var(--primary-color); border: none;
+            padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem;
+        }
+        .welcome-btn.secondary { background: transparent; border: 2px solid var(--accent-color); color: var(--accent-color); }
 
         header {
             background-color: var(--primary-color);
@@ -58,17 +75,6 @@
 
         .chapter-btn.active { background-color: var(--accent-color); border-color: var(--accent-color); }
 
-        /* אזור הערות ומנהגים */
-        .notes-sidebar {
-            background: #fdf4e3; border: 1px solid #e2d1b1;
-            padding: 15px; border-radius: 10px; margin-bottom: 20px;
-            font-size: 0.95rem; line-height: 1.5;
-        }
-        .notes-sidebar h3 { margin-top: 0; color: var(--primary-color); border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; }
-        .notes-list { list-style: none; padding: 0; }
-        .notes-list li { margin-bottom: 8px; padding-right: 15px; position: relative; }
-        .notes-list li::before { content: "•"; position: absolute; right: 0; color: var(--accent-color); }
-
         .instructions-hint { text-align: center; font-size: 1rem; color: #444; margin: 15px 0; font-weight: bold; }
 
         .tikkun-wrapper { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
@@ -80,10 +86,9 @@
             border-bottom: 5px solid var(--accent-color); box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
         }
 
-        .text-content { font-family: 'Guttman Stam', serif; line-height: 2; text-align: justify; word-wrap: break-word; }
+        .text-content { font-family: 'Guttman Stam', serif; line-height: 2.2; text-align: justify; word-wrap: break-word; }
         
-        /* עיצוב קמץ קטן */
-        .k-katan { color: var(--katan-color); font-weight: bold; }
+        .k-katan { color: var(--katan-color); font-weight: normal; } /* קמץ קטן ללא הדגשה */
         
         .verse-num { color: #999; font-size: 0.55em; margin-left: 8px; font-family: 'Heebo', sans-serif; }
         .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; display: inline; }
@@ -103,6 +108,15 @@
             font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;
             font-family: 'Heebo', sans-serif; font-size: 0.95rem;
         }
+
+        /* בועת מנהגים/הערות צפה */
+        #notePopup {
+            position: fixed; top: 120px; right: 20px; max-width: 250px;
+            background: #fdf4e3; border-right: 5px solid var(--accent-color);
+            padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 2000; display: none; font-size: 0.95rem; animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         .bottom-nav-btns { display: flex; justify-content: center; gap: 20px; margin-top: 30px; padding: 20px 0; }
         .nav-btn {
@@ -126,27 +140,31 @@
 
         .mini-btn {
             background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
-            padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; min-width: 60px;
-        }
-
-        #scrollToast {
-            position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.85); color: white; padding: 10px 20px;
-            border-radius: 25px; font-size: 0.85rem; display: none; z-index: 2001;
+            padding: 6px 10px; border-radius: 10px; cursor: pointer; font-size: 0.75rem; min-width: 50px;
         }
 
         @media (max-width: 768px) {
             header { flex-direction: column; padding: 15px; text-align: center; }
             header h1 { font-size: 1.8rem; }
             .dual-view-container { grid-template-columns: 1fr; }
-            .f-btn { padding: 10px 15px; font-size: 0.8rem; }
+            .mini-btn { font-size: 0.7rem; padding: 5px 8px; }
+            #welcomeOverlay h1 { font-size: 2.2rem; }
         }
     </style>
 </head>
 <body>
 
+    <div id="welcomeOverlay">
+        <h1>קול קורא המגילה</h1>
+        <p>הכנה למבצעים • מנהגי חב"ד • הברה ספרדית מדויקת</p>
+        <div class="welcome-btns">
+            <button class="welcome-btn" onclick="startApp('reader')">מצב בעלי קריאה</button>
+            <button class="welcome-btn secondary" onclick="startApp('listener')">מצב מאזינים</button>
+        </div>
+    </div>
+
     <header>
-        <h1>קול המגילה</h1>
+        <h1>קול קורא המגילה</h1>
         <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
     </header>
 
@@ -154,21 +172,16 @@
         <div class="chapter-nav" id="chapterNav"></div>
     </nav>
 
-    <div class="instructions-hint">לשמיעה – לחצו על הפסוק</div>
+    <div class="instructions-hint">לשמיעה – לחצו על הפסוק הרצוי</div>
+
+    <div id="notePopup"></div>
 
     <div class="tikkun-wrapper">
-        <!-- אזור הערות משתנה -->
-        <div id="notesArea" class="notes-sidebar" style="display:none;">
-            <h3>הערות ומנהגים לפרק</h3>
-            <ul id="notesList" class="notes-list"></ul>
-        </div>
-
         <main id="mainWrapper">
             <div id="dualContainer" class="column mode-chumash">
                 <div class="text-content" id="textContentArea"></div>
             </div>
         </main>
-        
         <div class="bottom-nav-btns" id="bottomNav"></div>
     </div>
 
@@ -176,21 +189,17 @@
         <button class="f-btn" id="mainCycleBtn" onclick="cycleDisplayMode()">לתצוגה ללא ניקוד וטעמים</button>
     </div>
 
-    <div id="scrollToast">לא ניתן לגלול במצב גלילה אוטומטית. בטל כדי לגלול חופשי.</div>
-
     <audio id="megillahAudio" ontimeupdate="syncText()"></audio>
 
-    <div class="bottom-player-bar">
+    <div class="bottom-player-bar" id="playerBar">
         <div class="player-content">
             <div style="display:flex; gap:8px; flex:1;">
                 <button class="mini-btn" id="speedBtn" onclick="toggleSpeed()">⏱ 1x</button>
                 <button class="mini-btn" id="scrollCycleBtn" onclick="cycleScrollMode()">לגלילה אוטומטית</button>
             </div>
-
             <button class="main-play-btn" onclick="togglePlayPause()">
                 <div id="playBtnIcon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></div>
             </button>
-
             <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
                 <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
                 <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
@@ -201,96 +210,162 @@
     <script src="megillahData.js"></script>
 
     <script>
-        let displayMode = 0; // 0=חומש, 1=מגילה, 2=עמודות
-        let scrollMode = 0; // 0=ידני, 1=אוטומטי
+        let displayMode = 0; 
+        let scrollMode = 0; 
+        let isSilentMode = false;
         let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
         let currentChapter = 1;
         let currentPlaybackRate = 1;
-        const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.8];
+        let currentSpeedIdx = 0;
+        const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 2.5, 3];
         const audio = document.getElementById('megillahAudio');
+        let lastShownNoteIndex = -1;
 
-        const svgPlay = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
-        const svgPause = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
-
-        // רשימת קמץ קטן לסימון
-        const kamatzKatanWords = ["כָּל", "מָרְדֳּכַ", "מַלְכֳּ", "רִצְפַּ", "יָפְיָ", "בְּאָמְרָ", "חֳדָשִׁים", "בְּאָמְנָ", "עָשְׁר", "וַיָּשָׁב", "וַתָּקָם", "שָׁמְעוּ", "תָּקְפּוּ"];
-
-        const chapterNotes = {
-            1: ["ה'מ' ד\"מלכו\" בקמץ־קטן (א, ג)", "ליזהר שלא לקרא ה'פ' ד\"רצפת\" מודגשת (א, ו)", "ה'י' הראשונה ד\"יפיה\" בקמץ־קטן (א, יא)", "ה'א' ד\"באמרם\" בקמץ־קטן (א, יז)", "נוהגים לפשוט המגילה כאגרת לפני הקריאה"],
-            2: ["ה'ח' ד\"חדשים\" בקמץ־קטן (ב, יב)", "ה'א' ד\"באמנה\" בקמץ־קטן (ב, כ)", "ה\"גֶ\" בסגול ולא בצירי (ב, ג)", "\"אשר הגלה...\" בניגון איכה (ב, ו)", "ה\" ד \" בפתח ולא בקמץ (ב, יב)", "ד' פסוקי גאולה - הציבור אומר בקול"],
-            3: ["ה'א' ד\"באמרם\" בקמץ־קטן (ג, ד)", "ה\"תֶ \" בסגול (ג, יד)", "\"وהמלך והמן...\" בניגון איכה (ג, טו)", "שוּשַן - ה'ש' בפתח (ג, טו)", "הכאה ברגליים בהמן עם תואר"],
-            4: ["פרק ד' פסוק א' - ניגון איכה", "\"וצום ובכי...\" ניגון איכה (ד, ג)", "ה'ק' ד\"לשקול\" בזקף-קטן (ד, ז)", "\"ובכן אבוא...\" ניגון איכה (ד, טז)"],
-            5: ["ה'ע' ד\"עשרו\" בקמץ־קטן (ה, יא)"],
-            6: ["ה'ש' ד\"וישב\" בקמץ־קטן (ו, יב)", "בלילה ההוא - מגביה קולו (ו, א)"],
-            7: ["ותנתן - ה'נ' קדמא, אין מקף (ז, ג)", "בנזק - ה'נ' בצירי (ז, ד)"],
-            8: ["ותקם - ה'ק' בקמץ-קטן (ח, ד)", "להרוג ולאבד - קוראים פעמיים (עם ובלי ו')"],
-            9: ["שמעו - ה'ש' בקמץ קטן (ט, ד)", "ותנתן - ה'ת' בסגול (ט, יד)", "איש לא עמד - קוראים פעמיים (בפניהם/לפניהם)", "עשרת בני המן - הכל בנשימה אחת", "נענוע המגילה ב\"האגרת הזאת\""],
-            10: ["תקפו - ה'ת' בקמץ קטן (י, ב)"]
+        // הגדרת מנהגים וקמץ קטן לפי פסוקים (אינדקס 0)
+        const verseSpecificNotes = {
+            1: {
+                2: "ה'מ' ד\"מלכו\" בקמץ קטן",
+                5: "ליזהר שלא לקרא ה'פ' ד\"רצפת\" מודגשת",
+                10: "ה'י' הראשונה ד\"יפיה\" בקמץ קטן (השניה רגילה)",
+                16: "ה'א' ד\"באמרם\" בקמץ קטן"
+            },
+            2: {
+                2: "ה\"גֶ\" בסגול ולא בצירי",
+                5: "בניגון איכה",
+                11: "ה'ח' ד\"חדשים\" בקמץ קטן",
+                11: "ה\"ד\" בפתח ולא בקמץ",
+                19: "ה'א' ד\"באמנה\" בקמץ קטן"
+            },
+            3: {
+                3: "ה'א' ד\"באמרם\" בקמץ קטן",
+                13: "ה\"תֶ\" בסגול ולא בצירי",
+                14: "מ\"והמלך\" בניגון איכה. שוּשַן ה'ש' בפתח"
+            },
+            5: { 10: "ה'ע' ד\"עשרו\" בקמץ קטן" },
+            6: { 
+                0: "בלילה ההוא - מגביה קולו כי פה מתחיל עיקר הנס",
+                11: "ה'ש' ד\"וישב\" בקמץ קטן"
+            },
+            8: { 3: "ה'ק' ד\"ותקם\" בקמץ קטן" },
+            9: { 3: "ה'ש' ד\"שמעו\" בקמץ קטן" },
+            10: { 1: "ה'ת' ד\"תקפו\" בקמץ קטן" }
         };
 
-        function setupNav() {
-            const nav = document.getElementById('chapterNav');
-            const letters = ["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
-            nav.innerHTML = '';
-            for(let i=1; i<=10; i++) {
-                const btn = document.createElement('button');
-                btn.className = `chapter-btn ${i===1?'active':''}`;
-                btn.innerHTML = `פרק ${letters[i]}`;
-                btn.onclick = () => loadChapter(i);
-                nav.appendChild(btn);
-            }
+        function startApp(mode) {
+            isSilentMode = (mode === 'listener');
+            if(isSilentMode) document.getElementById('playerBar').style.display = 'none';
+            document.getElementById('welcomeOverlay').style.opacity = '0';
+            setTimeout(() => { document.getElementById('welcomeOverlay').style.display = 'none'; }, 500);
+            setupNav();
+            loadChapter(1);
         }
 
-        function highlightKamatzKatan(text) {
+        function highlightKamatzKatan(text, chap, vIdx) {
             let formatted = text;
-            kamatzKatanWords.forEach(word => {
-                const regex = new RegExp(word, 'g');
-                // מחליף את הקמץ (ָ) בתוך המילה לתגית עם עיצוב
-                formatted = formatted.replace(regex, (match) => {
-                    return match.replace(/אָ/g, '<span class="k-katan">אָ</span>')
-                                .replace(/בָּ/g, '<span class="k-katan">בָּ</span>')
-                                .replace(/חֳ/g, '<span class="k-katan">חֳ</span>')
-                                .replace(/שָׁ/g, '<span class="k-katan">שָׁ</span>')
-                                .replace(/תָּ/g, '<span class="k-katan">תָּ</span>')
-                                .replace(/יָ/g, '<span class="k-katan">יָ</span>')
-                                .replace(/מָ/g, '<span class="k-katan">מָ</span>')
-                                .replace(/קָ/g, '<span class="k-katan">קָ</span>')
-                                .replace(/עָ/g, '<span class="k-katan">עָ</span>')
-                                .replace(/רָ/g, '<span class="k-katan">רָ</span>');
-                });
+            // רשימת החלפות מדויקת רק לאותיות המבוקשות
+            const targets = [
+                {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>"}, // מלכו
+                {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ"}, // יפיה - רק ראשונה
+                {c:1, v:16, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
+                {c:2, v:11, from:"חֳ", to:"<span class='k-katan'>חֳ</span>"}, // חדשים
+                {c:2, v:19, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמנה
+                {c:3, v:3, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
+                {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>"}, // עשרו
+                {c:6, v:11, from:"יָּ", to:"יָּ<span class='k-katan'>שָׁ</span>"}, // וישב (הש' אחרי הי')
+                {c:8, v:3, from:"תָּ", to:"וַתָּ<span class='k-katan'>קָ</span>"}, // ותקם (הק' בקמץ)
+                {c:9, v:3, from:"שָׁ", to:"<span class='k-katan'>שָׁ</span>"}, // שמעו
+                {c:10, v:1, from:"תָּ", to:"<span class='k-katan'>תָּ</span>"} // תקפו
+            ];
+
+            targets.forEach(t => {
+                if(chap === t.c && vIdx === t.v) {
+                    formatted = formatted.replace(t.from, t.to);
+                }
             });
             return formatted;
         }
 
         function stripNikkud(t) {
             let clean = t.replace(/[\u0591-\u05C7]/g, '');
-            clean = clean.replace(/[־-]/g, ' '); // החלפת כל סוגי המקפים ברווח
+            // תיקון מקף עליון ותחתון לרווח
+            clean = clean.replace(/[\u05BE-]/g, ' '); 
             clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
             return clean.trim();
         }
 
         function loadChapter(num) {
             currentChapter = num;
+            lastShownNoteIndex = -1;
+            hideNote();
             document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
             applyLayout();
             updateBottomNav();
-            updateNotes();
             
-            audio.src = `./audio/chap${num}.mp3`;
-            audio.oncanplaythrough = () => audio.playbackRate = currentPlaybackRate;
+            if(!isSilentMode) {
+                audio.src = `./audio/chap${num}.mp3`;
+                audio.oncanplaythrough = () => audio.playbackRate = currentPlaybackRate;
+            }
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
-        function updateNotes() {
-            const area = document.getElementById('notesArea');
-            const list = document.getElementById('notesList');
-            const notes = chapterNotes[currentChapter] || [];
-            if(notes.length > 0) {
-                area.style.display = 'block';
-                list.innerHTML = notes.map(n => `<li>${n}</li>`).join('');
-            } else {
-                area.style.display = 'none';
+        function syncText() {
+            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
+            let activeIdx = -1;
+            for (let i = 0; i < data.length; i++) { if (audio.currentTime >= data[i].time) activeIdx = i; }
+            
+            document.querySelectorAll('.pasuk').forEach(p => p.classList.remove('playing-now'));
+            const activeSpans = document.querySelectorAll(`.pasuk[data-index="${activeIdx}"]`);
+            
+            if(activeSpans.length > 0) {
+                activeSpans.forEach(s => s.classList.add('playing-now'));
+                if(scrollMode === 1) {
+                    const offset = activeSpans[0].getBoundingClientRect().top + window.scrollY - 150;
+                    window.scrollTo({ top: offset, behavior: 'smooth' });
+                }
+
+                // הצגת הערה/מנהג אם קיים לפסוק זה
+                if(activeIdx !== lastShownNoteIndex) {
+                    const note = verseSpecificNotes[currentChapter] && verseSpecificNotes[currentChapter][activeIdx];
+                    if(note) showNote(note);
+                    else hideNote();
+                    lastShownNoteIndex = activeIdx;
+                }
             }
+        }
+
+        function showNote(txt) {
+            const popup = document.getElementById('notePopup');
+            popup.innerHTML = `<strong>הערה/מנהג:</strong><br>${txt}`;
+            popup.style.display = 'block';
+        }
+
+        function hideNote() { document.getElementById('notePopup').style.display = 'none'; }
+
+        function renderTextToElement(area, isDual) {
+            area.innerHTML = '';
+            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
+            const size = isDual ? (currentFontSize * 0.75) : currentFontSize;
+            area.style.fontSize = size + 'rem';
+
+            data.forEach((item, idx) => {
+                const span = document.createElement('span');
+                span.className = 'pasuk';
+                span.dataset.index = idx;
+                span.onclick = () => { 
+                    if(!isSilentMode) { audio.currentTime = item.time; audio.play(); }
+                };
+
+                let text = highlightKamatzKatan(item.t, currentChapter, idx);
+                let verseMatch = text.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+                let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
+                let cleanWith = verseMatch ? text.replace(verseMatch[1], '') : text;
+
+                span.innerHTML = `
+                    <span class="text-with">${verseHtml}${cleanWith}</span>
+                    <span class="text-without">${stripNikkud(cleanWith)}</span>
+                `;
+                area.appendChild(span);
+            });
         }
 
         function cycleDisplayMode() {
@@ -309,35 +384,11 @@
             btn.style.color = scrollMode === 1 ? "var(--primary-color)" : "white";
         }
 
-        function renderTextToElement(area, isDual) {
-            area.innerHTML = '';
-            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
-            const size = isDual ? (currentFontSize * 0.75) : currentFontSize;
-            area.style.fontSize = size + 'rem';
-
-            data.forEach((item, idx) => {
-                const span = document.createElement('span');
-                span.className = 'pasuk';
-                span.dataset.index = idx;
-                span.onclick = () => { audio.currentTime = item.time; audio.play(); };
-
-                let text = highlightKamatzKatan(item.t);
-                
-                // תיקונים ידניים לפי רשימת המנהגים
-                if(currentChapter === 2 && idx === 2) text = text.replace("הֵגֶא", "הֵגֶא"); // לוודא סגול
-                if(currentChapter === 3 && idx === 13) text = text.replace("לְהִנָּתֵן", "לְהִנָּתֶן");
-                if(currentChapter === 9 && idx === 13) text = text.replace("וַתִּנָּתֵן", "וַתִּנָּתֶן");
-
-                let verseMatch = text.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
-                let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
-                let cleanWith = verseMatch ? text.replace(verseMatch[1], '') : text;
-
-                span.innerHTML = `
-                    <span class="text-with">${verseHtml}${cleanWith}</span>
-                    <span class="text-without">${stripNikkud(cleanWith)}</span>
-                `;
-                area.appendChild(span);
-            });
+        function toggleSpeed() {
+            currentSpeedIdx = (currentSpeedIdx + 1) % playSpeeds.length;
+            currentPlaybackRate = playSpeeds[currentSpeedIdx];
+            audio.playbackRate = currentPlaybackRate;
+            document.getElementById('speedBtn').innerText = '⏱ ' + currentPlaybackRate + 'x';
         }
 
         function applyLayout() {
@@ -368,34 +419,25 @@
             }
         }
 
+        function setupNav() {
+            const nav = document.getElementById('chapterNav');
+            const letters = ["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
+            nav.innerHTML = '';
+            for(let i=1; i<=10; i++) {
+                const btn = document.createElement('button');
+                btn.className = `chapter-btn ${i===1?'active':''}`;
+                btn.innerHTML = `פרק ${letters[i]}`;
+                btn.onclick = () => loadChapter(i);
+                nav.appendChild(btn);
+            }
+        }
+
         function updateBottomNav() {
             const nav = document.getElementById('bottomNav');
             nav.innerHTML = `
                 <button class="nav-btn" ${currentChapter===1?'disabled':''} onclick="loadChapter(${currentChapter-1})">פרק הקודם</button>
                 <button class="nav-btn" ${currentChapter===10?'disabled':''} onclick="loadChapter(${currentChapter+1})">פרק הבא</button>
             `;
-        }
-
-        function syncText() {
-            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
-            let activeIdx = -1;
-            for (let i = 0; i < data.length; i++) { if (audio.currentTime >= data[i].time) activeIdx = i; }
-            document.querySelectorAll('.pasuk').forEach(p => p.classList.remove('playing-now'));
-            const activeSpans = document.querySelectorAll(`.pasuk[data-index="${activeIdx}"]`);
-            if(activeSpans.length > 0) {
-                activeSpans.forEach(s => s.classList.add('playing-now'));
-                if(scrollMode === 1) {
-                    const offset = activeSpans[0].getBoundingClientRect().top + window.scrollY - 150;
-                    window.scrollTo({ top: offset, behavior: 'smooth' });
-                }
-            }
-        }
-
-        function toggleSpeed() {
-            currentSpeedIdx = (currentSpeedIdx + 1) % playSpeeds.length;
-            currentPlaybackRate = playSpeeds[currentSpeedIdx];
-            audio.playbackRate = currentPlaybackRate;
-            document.getElementById('speedBtn').innerText = '⏱ ' + currentPlaybackRate + 'x';
         }
 
         function changeFontSize(d) {
@@ -408,10 +450,8 @@
         }
 
         function togglePlayPause() { audio.paused ? audio.play() : audio.pause(); }
-        audio.onplay = () => document.getElementById('playBtnIcon').innerHTML = svgPause;
-        audio.onpause = () => document.getElementById('playBtnIcon').innerHTML = svgPlay;
-
-        window.onload = () => { setupNav(); loadChapter(1); };
+        audio.onplay = () => document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
+        audio.onpause = () => document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
     </script>
 </body>
 </html>
