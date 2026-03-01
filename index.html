@@ -15,6 +15,7 @@
             --text-color: #1a1a1a;
             --playing-bg: rgba(11, 28, 44, 0.08);
             --bottom-bar-height: 110px;
+            --katan-color: #b22222; /* צבע לקמץ קטן */
         }
 
         @font-face {
@@ -29,77 +30,62 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             padding-bottom: var(--bottom-bar-height);
-            overflow-x: hidden;
         }
 
         header {
             background-color: var(--primary-color);
-            color: white;
-            padding: 20px 40px;
+            color: white; padding: 20px 40px;
             border-bottom: 4px solid var(--accent-color);
             display: flex; justify-content: space-between; align-items: center;
-            position: relative;
         }
 
         header h1 { margin: 0; font-family: 'Frank Ruhl Libre', serif; font-size: 2.5rem; flex: 1; text-align: right; }
         header h2 { margin: 0; color: var(--accent-color); font-size: 1rem; flex: 1; text-align: left; font-weight: 400; line-height: 1.4; }
 
         .top-nav-bar {
-            background-color: #fff;
-            position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            overflow-x: auto;
-            display: flex;
-            justify-content: flex-start;
-            padding: 10px;
-            -webkit-overflow-scrolling: touch;
+            background-color: #fff; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto;
+            display: flex; justify-content: flex-start; padding: 10px;
         }
 
-        .chapter-nav { display: flex; gap: 8px; padding-right: 10px; padding-left: 20px; }
+        .chapter-nav { display: flex; gap: 8px; padding: 0 10px; }
 
         .chapter-btn {
             background-color: #f8f8f8; color: var(--primary-color);
             border: 1px solid #ddd; padding: 8px 15px;
-            border-radius: 8px; cursor: pointer;
-            font-weight: 600; white-space: nowrap; transition: 0.2s;
+            border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap;
         }
 
-        .chapter-btn.active { 
-            background-color: var(--accent-color); 
-            border-color: var(--accent-color);
-            color: var(--primary-color);
-        }
+        .chapter-btn.active { background-color: var(--accent-color); border-color: var(--accent-color); }
 
-        .instructions-hint {
-            text-align: center; font-size: 1rem; color: #444;
-            margin: 15px 0 5px 0; font-weight: bold;
+        /* אזור הערות ומנהגים */
+        .notes-sidebar {
+            background: #fdf4e3; border: 1px solid #e2d1b1;
+            padding: 15px; border-radius: 10px; margin-bottom: 20px;
+            font-size: 0.95rem; line-height: 1.5;
         }
+        .notes-sidebar h3 { margin-top: 0; color: var(--primary-color); border-bottom: 1px solid var(--accent-color); padding-bottom: 5px; }
+        .notes-list { list-style: none; padding: 0; }
+        .notes-list li { margin-bottom: 8px; padding-right: 15px; position: relative; }
+        .notes-list li::before { content: "•"; position: absolute; right: 0; color: var(--accent-color); }
 
-        .tikkun-wrapper { 
-            max-width: 1200px; margin: 20px auto; padding: 0 20px;
-        }
+        .instructions-hint { text-align: center; font-size: 1rem; color: #444; margin: 15px 0; font-weight: bold; }
 
-        .dual-view-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            width: 100%;
-        }
+        .tikkun-wrapper { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+
+        .dual-view-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
 
         .column { 
             background: white; padding: 30px; border-radius: 12px; 
-            border-bottom: 5px solid var(--accent-color); 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+            border-bottom: 5px solid var(--accent-color); box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
         }
 
-        .text-content { 
-            font-family: 'Guttman Stam', serif; 
-            line-height: 2; 
-            text-align: justify; 
-            word-wrap: break-word;
-        }
+        .text-content { font-family: 'Guttman Stam', serif; line-height: 2; text-align: justify; word-wrap: break-word; }
         
-        .verse-num { color: #999; font-size: 0.55em; margin-left: 8px; font-family: 'Heebo', sans-serif; font-weight: normal; }
+        /* עיצוב קמץ קטן */
+        .k-katan { color: var(--katan-color); font-weight: bold; }
+        
+        .verse-num { color: #999; font-size: 0.55em; margin-left: 8px; font-family: 'Heebo', sans-serif; }
         .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; display: inline; }
         .pasuk.playing-now { background-color: var(--playing-bg); border-bottom: 3px solid var(--accent-color); }
 
@@ -115,24 +101,19 @@
             background: var(--accent-color); color: var(--primary-color);
             border: none; padding: 12px 22px; border-radius: 50px;
             font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;
-            font-family: 'Heebo', sans-serif; font-size: 1rem;
+            font-family: 'Heebo', sans-serif; font-size: 0.95rem;
         }
 
-        .bottom-nav-btns {
-            display: flex; justify-content: center; gap: 20px; margin-top: 30px; padding: 20px 0;
-        }
+        .bottom-nav-btns { display: flex; justify-content: center; gap: 20px; margin-top: 30px; padding: 20px 0; }
         .nav-btn {
             background: var(--primary-color); color: white; border: none;
-            padding: 10px 25px; border-radius: 8px; cursor: pointer;
-            font-weight: bold; font-family: 'Heebo', sans-serif;
+            padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold;
         }
-        .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
 
         .bottom-player-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
             background-color: var(--primary-color); height: var(--bottom-bar-height);
             z-index: 1000; display: flex; justify-content: center; align-items: center;
-            border-top: 1px solid rgba(212, 175, 55, 0.3);
         }
 
         .player-content { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 800px; padding: 0 20px; }
@@ -140,14 +121,12 @@
         .main-play-btn {
             background: var(--accent-color); border: none; width: 62px; height: 62px;
             border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .main-play-btn svg { width: 30px; height: 30px; fill: var(--primary-color); }
 
         .mini-btn {
             background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
-            padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.85rem;
-            min-width: 45px; text-align: center;
+            padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; min-width: 60px;
         }
 
         #scrollToast {
@@ -158,9 +137,9 @@
 
         @media (max-width: 768px) {
             header { flex-direction: column; padding: 15px; text-align: center; }
-            header h1 { font-size: 2rem; }
-            header h2 { font-size: 0.9rem; }
+            header h1 { font-size: 1.8rem; }
             .dual-view-container { grid-template-columns: 1fr; }
+            .f-btn { padding: 10px 15px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -177,18 +156,27 @@
 
     <div class="instructions-hint">לשמיעה – לחצו על הפסוק</div>
 
+    <div class="tikkun-wrapper">
+        <!-- אזור הערות משתנה -->
+        <div id="notesArea" class="notes-sidebar" style="display:none;">
+            <h3>הערות ומנהגים לפרק</h3>
+            <ul id="notesList" class="notes-list"></ul>
+        </div>
+
+        <main id="mainWrapper">
+            <div id="dualContainer" class="column mode-chumash">
+                <div class="text-content" id="textContentArea"></div>
+            </div>
+        </main>
+        
+        <div class="bottom-nav-btns" id="bottomNav"></div>
+    </div>
+
     <div class="floating-controls">
         <button class="f-btn" id="mainCycleBtn" onclick="cycleDisplayMode()">לתצוגה ללא ניקוד וטעמים</button>
     </div>
 
-    <main class="tikkun-wrapper" id="mainWrapper">
-        <div id="dualContainer" class="column mode-chumash">
-            <div class="text-content" id="textContentArea"></div>
-        </div>
-        <div class="bottom-nav-btns" id="bottomNav"></div>
-    </main>
-
-    <div id="scrollToast">לא ניתן לגלול מפני שמוגדר על מצב גלילה אוטומטית. אם ברצונך לגלול בטל את הלחצן "גלילה אוטומטית".</div>
+    <div id="scrollToast">לא ניתן לגלול במצב גלילה אוטומטית. בטל כדי לגלול חופשי.</div>
 
     <audio id="megillahAudio" ontimeupdate="syncText()"></audio>
 
@@ -196,7 +184,7 @@
         <div class="player-content">
             <div style="display:flex; gap:8px; flex:1;">
                 <button class="mini-btn" id="speedBtn" onclick="toggleSpeed()">⏱ 1x</button>
-                <button class="mini-btn" id="scrollToggleBtn" onclick="toggleAutoScroll()">גלילה ידנית</button>
+                <button class="mini-btn" id="scrollCycleBtn" onclick="cycleScrollMode()">לגלילה אוטומטית</button>
             </div>
 
             <button class="main-play-btn" onclick="togglePlayPause()">
@@ -213,16 +201,32 @@
     <script src="megillahData.js"></script>
 
     <script>
-        let displayMode = 0; // 0=חומש, 1=מגילה, 2=שתי עמודות
+        let displayMode = 0; // 0=חומש, 1=מגילה, 2=עמודות
+        let scrollMode = 0; // 0=ידני, 1=אוטומטי
         let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
         let currentChapter = 1;
-        let isAutoScroll = false; 
-        let currentSpeedIdx = 0;
-        const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.8]; // הוספת מהירויות
+        let currentPlaybackRate = 1;
+        const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.8];
         const audio = document.getElementById('megillahAudio');
 
         const svgPlay = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
         const svgPause = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
+
+        // רשימת קמץ קטן לסימון
+        const kamatzKatanWords = ["כָּל", "מָרְדֳּכַ", "מַלְכֳּ", "רִצְפַּ", "יָפְיָ", "בְּאָמְרָ", "חֳדָשִׁים", "בְּאָמְנָ", "עָשְׁר", "וַיָּשָׁב", "וַתָּקָם", "שָׁמְעוּ", "תָּקְפּוּ"];
+
+        const chapterNotes = {
+            1: ["ה'מ' ד\"מלכו\" בקמץ־קטן (א, ג)", "ליזהר שלא לקרא ה'פ' ד\"רצפת\" מודגשת (א, ו)", "ה'י' הראשונה ד\"יפיה\" בקמץ־קטן (א, יא)", "ה'א' ד\"באמרם\" בקמץ־קטן (א, יז)", "נוהגים לפשוט המגילה כאגרת לפני הקריאה"],
+            2: ["ה'ח' ד\"חדשים\" בקמץ־קטן (ב, יב)", "ה'א' ד\"באמנה\" בקמץ־קטן (ב, כ)", "ה\"גֶ\" בסגול ולא בצירי (ב, ג)", "\"אשר הגלה...\" בניגון איכה (ב, ו)", "ה\" ד \" בפתח ולא בקמץ (ב, יב)", "ד' פסוקי גאולה - הציבור אומר בקול"],
+            3: ["ה'א' ד\"באמרם\" בקמץ־קטן (ג, ד)", "ה\"תֶ \" בסגול (ג, יד)", "\"وהמלך והמן...\" בניגון איכה (ג, טו)", "שוּשַן - ה'ש' בפתח (ג, טו)", "הכאה ברגליים בהמן עם תואר"],
+            4: ["פרק ד' פסוק א' - ניגון איכה", "\"וצום ובכי...\" ניגון איכה (ד, ג)", "ה'ק' ד\"לשקול\" בזקף-קטן (ד, ז)", "\"ובכן אבוא...\" ניגון איכה (ד, טז)"],
+            5: ["ה'ע' ד\"עשרו\" בקמץ־קטן (ה, יא)"],
+            6: ["ה'ש' ד\"וישב\" בקמץ־קטן (ו, יב)", "בלילה ההוא - מגביה קולו (ו, א)"],
+            7: ["ותנתן - ה'נ' קדמא, אין מקף (ז, ג)", "בנזק - ה'נ' בצירי (ז, ד)"],
+            8: ["ותקם - ה'ק' בקמץ-קטן (ח, ד)", "להרוג ולאבד - קוראים פעמיים (עם ובלי ו')"],
+            9: ["שמעו - ה'ש' בקמץ קטן (ט, ד)", "ותנתן - ה'ת' בסגול (ט, יד)", "איש לא עמד - קוראים פעמיים (בפניהם/לפניהם)", "עשרת בני המן - הכל בנשימה אחת", "נענוע המגילה ב\"האגרת הזאת\""],
+            10: ["תקפו - ה'ת' בקמץ קטן (י, ב)"]
+        };
 
         function setupNav() {
             const nav = document.getElementById('chapterNav');
@@ -237,61 +241,79 @@
             }
         }
 
+        function highlightKamatzKatan(text) {
+            let formatted = text;
+            kamatzKatanWords.forEach(word => {
+                const regex = new RegExp(word, 'g');
+                // מחליף את הקמץ (ָ) בתוך המילה לתגית עם עיצוב
+                formatted = formatted.replace(regex, (match) => {
+                    return match.replace(/אָ/g, '<span class="k-katan">אָ</span>')
+                                .replace(/בָּ/g, '<span class="k-katan">בָּ</span>')
+                                .replace(/חֳ/g, '<span class="k-katan">חֳ</span>')
+                                .replace(/שָׁ/g, '<span class="k-katan">שָׁ</span>')
+                                .replace(/תָּ/g, '<span class="k-katan">תָּ</span>')
+                                .replace(/יָ/g, '<span class="k-katan">יָ</span>')
+                                .replace(/מָ/g, '<span class="k-katan">מָ</span>')
+                                .replace(/קָ/g, '<span class="k-katan">קָ</span>')
+                                .replace(/עָ/g, '<span class="k-katan">עָ</span>')
+                                .replace(/רָ/g, '<span class="k-katan">רָ</span>');
+                });
+            });
+            return formatted;
+        }
+
         function stripNikkud(t) {
-            // הסרת ניקוד וטעמים
             let clean = t.replace(/[\u0591-\u05C7]/g, '');
-            // החלפת מקף עברי (־) ומקף רגיל (-) ברווח
-            clean = clean.replace(/[־-]/g, ' ');
-            // הסרת פ' וס' רק כשהן סימני פרשה בודדים
+            clean = clean.replace(/[־-]/g, ' '); // החלפת כל סוגי המקפים ברווח
             clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
             return clean.trim();
         }
 
         function loadChapter(num) {
-            if (num < 1 || num > 10) return;
             currentChapter = num;
             document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
-            
-            // שמירת מהירות נוכחית לפני החלפת מקור
-            const savedSpeed = playSpeeds[currentSpeedIdx];
-            
             applyLayout();
             updateBottomNav();
+            updateNotes();
             
             audio.src = `./audio/chap${num}.mp3`;
-            
-            // החלת המהירות מחדש לאחר טעינת הפרק החדש
-            audio.oncanplaythrough = () => {
-                audio.playbackRate = savedSpeed;
-            };
-
+            audio.oncanplaythrough = () => audio.playbackRate = currentPlaybackRate;
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
-        function updateBottomNav() {
-            const bottomNav = document.getElementById('bottomNav');
-            bottomNav.innerHTML = `
-                <button class="nav-btn" ${currentChapter === 1 ? 'disabled' : ''} onclick="loadChapter(${currentChapter - 1})">פרק הקודם</button>
-                <button class="nav-btn" ${currentChapter === 10 ? 'disabled' : ''} onclick="loadChapter(${currentChapter + 1})">פרק הבא</button>
-            `;
+        function updateNotes() {
+            const area = document.getElementById('notesArea');
+            const list = document.getElementById('notesList');
+            const notes = chapterNotes[currentChapter] || [];
+            if(notes.length > 0) {
+                area.style.display = 'block';
+                list.innerHTML = notes.map(n => `<li>${n}</li>`).join('');
+            } else {
+                area.style.display = 'none';
+            }
         }
 
         function cycleDisplayMode() {
             displayMode = (displayMode + 1) % 3;
             const btn = document.getElementById('mainCycleBtn');
-            // הגדרת הטקסט ללחצן לפי המצב הבא
             const labels = ["לתצוגה ללא ניקוד וטעמים", "לתצוגת שתי עמודות", "לתצוגה עם ניקוד וטעמים"];
             btn.innerText = labels[displayMode];
             applyLayout();
         }
 
+        function cycleScrollMode() {
+            scrollMode = (scrollMode + 1) % 2;
+            const btn = document.getElementById('scrollCycleBtn');
+            btn.innerText = scrollMode === 0 ? "לגלילה אוטומטית" : "לגלילה ידנית";
+            btn.style.background = scrollMode === 1 ? "var(--accent-color)" : "rgba(255,255,255,0.1)";
+            btn.style.color = scrollMode === 1 ? "var(--primary-color)" : "white";
+        }
+
         function renderTextToElement(area, isDual) {
             area.innerHTML = '';
             const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
-            
-            // הקטנת טקסט אוטומטית אם אנחנו בשתי עמודות
-            const effectiveSize = isDual ? (currentFontSize * 0.8) : currentFontSize;
-            area.style.fontSize = effectiveSize + 'rem';
+            const size = isDual ? (currentFontSize * 0.75) : currentFontSize;
+            area.style.fontSize = size + 'rem';
 
             data.forEach((item, idx) => {
                 const span = document.createElement('span');
@@ -299,14 +321,20 @@
                 span.dataset.index = idx;
                 span.onclick = () => { audio.currentTime = item.time; audio.play(); };
 
-                let text = item.t;
+                let text = highlightKamatzKatan(item.t);
+                
+                // תיקונים ידניים לפי רשימת המנהגים
+                if(currentChapter === 2 && idx === 2) text = text.replace("הֵגֶא", "הֵגֶא"); // לוודא סגול
+                if(currentChapter === 3 && idx === 13) text = text.replace("לְהִנָּתֵן", "לְהִנָּתֶן");
+                if(currentChapter === 9 && idx === 13) text = text.replace("וַתִּנָּתֵן", "וַתִּנָּתֶן");
+
                 let verseMatch = text.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
                 let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
-                let cleanText = verseMatch ? text.replace(verseMatch[1], '') : text;
+                let cleanWith = verseMatch ? text.replace(verseMatch[1], '') : text;
 
                 span.innerHTML = `
-                    <span class="text-with">${verseHtml}${cleanText}</span>
-                    <span class="text-without">${stripNikkud(cleanText)}</span>
+                    <span class="text-with">${verseHtml}${cleanWith}</span>
+                    <span class="text-without">${stripNikkud(cleanWith)}</span>
                 `;
                 area.appendChild(span);
             });
@@ -315,115 +343,75 @@
         function applyLayout() {
             const wrapper = document.getElementById('mainWrapper');
             wrapper.innerHTML = ''; 
-            
             if (displayMode === 2) {
                 const grid = document.createElement('div');
                 grid.className = 'dual-view-container';
-                
-                const col1 = document.createElement('div');
-                col1.className = 'column mode-chumash';
-                const area1 = document.createElement('div');
-                area1.className = 'text-content';
-                renderTextToElement(area1, true);
-                col1.appendChild(area1);
-                
-                const col2 = document.createElement('div');
-                col2.className = 'column mode-megillah';
-                const area2 = document.createElement('div');
-                area2.className = 'text-content';
-                renderTextToElement(area2, true);
-                col2.appendChild(area2);
-                
-                grid.appendChild(col1);
-                grid.appendChild(col2);
+                [0, 1].forEach(m => {
+                    const col = document.createElement('div');
+                    col.className = `column ${m===0?'mode-chumash':'mode-megillah'}`;
+                    const inner = document.createElement('div');
+                    inner.className = 'text-content';
+                    renderTextToElement(inner, true);
+                    col.appendChild(inner);
+                    grid.appendChild(col);
+                });
                 wrapper.appendChild(grid);
             } else {
                 const col = document.createElement('div');
-                col.className = 'column ' + (displayMode === 0 ? 'mode-chumash' : 'mode-megillah');
-                const area = document.createElement('div');
-                area.id = 'textContentArea';
-                area.className = 'text-content';
-                renderTextToElement(area, false);
-                col.appendChild(area);
+                col.className = `column ${displayMode===0?'mode-chumash':'mode-megillah'}`;
+                const inner = document.createElement('div');
+                inner.className = 'text-content';
+                inner.id = 'textContentArea';
+                renderTextToElement(inner, false);
+                col.appendChild(inner);
                 wrapper.appendChild(col);
             }
-            
-            const nav = document.createElement('div');
-            nav.id = 'bottomNav';
-            nav.className = 'bottom-nav-btns';
-            wrapper.appendChild(nav);
-            updateBottomNav();
         }
 
-        function toggleAutoScroll() {
-            isAutoScroll = !isAutoScroll;
-            const btn = document.getElementById('scrollToggleBtn');
-            btn.innerText = isAutoScroll ? "גלילה אוטומטית" : "גלילה ידנית";
-            btn.style.background = isAutoScroll ? "var(--accent-color)" : "rgba(255,255,255,0.1)";
-            btn.style.color = isAutoScroll ? "var(--primary-color)" : "white";
+        function updateBottomNav() {
+            const nav = document.getElementById('bottomNav');
+            nav.innerHTML = `
+                <button class="nav-btn" ${currentChapter===1?'disabled':''} onclick="loadChapter(${currentChapter-1})">פרק הקודם</button>
+                <button class="nav-btn" ${currentChapter===10?'disabled':''} onclick="loadChapter(${currentChapter+1})">פרק הבא</button>
+            `;
         }
-
-        const showToast = () => {
-            if(!isAutoScroll) return;
-            const t = document.getElementById('scrollToast');
-            t.style.display = 'block';
-            clearTimeout(window.toastTimer);
-            window.toastTimer = setTimeout(() => t.style.display = 'none', 3000);
-        };
-
-        window.addEventListener('wheel', showToast);
-        window.addEventListener('touchstart', showToast);
 
         function syncText() {
             const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
             let activeIdx = -1;
-            for (let i = 0; i < data.length; i++) {
-                if (audio.currentTime >= data[i].time) activeIdx = i;
-            }
-            
+            for (let i = 0; i < data.length; i++) { if (audio.currentTime >= data[i].time) activeIdx = i; }
             document.querySelectorAll('.pasuk').forEach(p => p.classList.remove('playing-now'));
             const activeSpans = document.querySelectorAll(`.pasuk[data-index="${activeIdx}"]`);
-            
             if(activeSpans.length > 0) {
                 activeSpans.forEach(s => s.classList.add('playing-now'));
-                if(isAutoScroll) {
+                if(scrollMode === 1) {
                     const offset = activeSpans[0].getBoundingClientRect().top + window.scrollY - 150;
                     window.scrollTo({ top: offset, behavior: 'smooth' });
                 }
             }
         }
 
+        function toggleSpeed() {
+            currentSpeedIdx = (currentSpeedIdx + 1) % playSpeeds.length;
+            currentPlaybackRate = playSpeeds[currentSpeedIdx];
+            audio.playbackRate = currentPlaybackRate;
+            document.getElementById('speedBtn').innerText = '⏱ ' + currentPlaybackRate + 'x';
+        }
+
         function changeFontSize(d) {
             currentFontSize += d * 0.15;
             if(currentFontSize < 1.2) currentFontSize = 1.2;
-            if(currentFontSize > 5) currentFontSize = 5;
-            
-            // עדכון גודל בכל התיבות הקיימות
             document.querySelectorAll('.text-content').forEach(el => {
                 const isDual = el.closest('.dual-view-container') !== null;
-                el.style.fontSize = (isDual ? currentFontSize * 0.8 : currentFontSize) + 'rem';
+                el.style.fontSize = (isDual ? currentFontSize * 0.75 : currentFontSize) + 'rem';
             });
         }
 
-        function togglePlayPause() {
-            if (audio.paused) audio.play();
-            else audio.pause();
-        }
-
+        function togglePlayPause() { audio.paused ? audio.play() : audio.pause(); }
         audio.onplay = () => document.getElementById('playBtnIcon').innerHTML = svgPause;
         audio.onpause = () => document.getElementById('playBtnIcon').innerHTML = svgPlay;
 
-        function toggleSpeed() {
-            currentSpeedIdx = (currentSpeedIdx + 1) % playSpeeds.length;
-            const newSpeed = playSpeeds[currentSpeedIdx];
-            audio.playbackRate = newSpeed;
-            document.getElementById('speedBtn').innerText = '⏱ ' + newSpeed + 'x';
-        }
-
-        window.onload = () => {
-            setupNav();
-            loadChapter(1);
-        };
+        window.onload = () => { setupNav(); loadChapter(1); };
     </script>
 </body>
 </html>
