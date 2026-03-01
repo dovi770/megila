@@ -7,7 +7,15 @@
     <title>קול קורא המגילה</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+<!-- הוספת הפונט SBL Hebrew מ-Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=SBL+Hebrew&display=swap" rel="stylesheet">
+<!-- אם הפונט SBL Hebrew מאורח מקומית, ודא שהקובץ בנתיב הנכון והצהרת @font-face מוגדרת:
+@font-face {
+    font-family: 'SBL Hebrew';
+    src: url('./fonts/SBL_Hbrw.ttf') format('truetype');
+    font-weight: normal; font-style: normal;
+}
+-->
 
 <style>
     :root {
@@ -83,7 +91,7 @@
 
     .dual-view-container { 
         display: grid; 
-        grid-template-columns: 1fr 1fr; 
+        grid-template-columns: 1fr 1fr; /* תמיד שתי עמודות */
         gap: 15px; 
         width: 100%; 
     }
@@ -99,18 +107,14 @@
         word-wrap: break-word; 
     }
     
+    /* פונט לטקסט עם ניקוד וטעמים */
     .mode-chumash .text-content {
         font-family: 'SBL Hebrew', serif; 
     }
 
+    /* פונט לטקסט ללא ניקוד וטעמים */
     .mode-megillah .text-content {
         font-family: 'Guttman Stam', serif; 
-    }
-    
-    /* דחיסת רווחים בתיבת הסת"ם כשהיא נמצאת בתצוגה כפולה, כדי להתאים לאורך הניקוד */
-    .dual-view-container .mode-megillah .text-content {
-        letter-spacing: -0.02em;
-        word-spacing: -0.05em;
     }
     
     .k-katan { 
@@ -168,8 +172,15 @@
         header { flex-direction: column; padding: 15px; text-align: center; }
         header h1 { font-size: 1.8rem; }
         
-        .welcome-btns { flex-direction: column; gap: 15px; width: 80%; }
-        .welcome-btn { width: 100%; box-sizing: border-box; }
+        .welcome-btns { 
+            flex-direction: column; 
+            gap: 15px; 
+            width: 80%; 
+        }
+        .welcome-btn {
+            width: 100%; 
+            box-sizing: border-box; 
+        }
 
         .mini-btn { font-size: 0.7rem; padding: 5px 8px; }
         #welcomeOverlay h1 { font-size: 2.2rem; }
@@ -265,6 +276,7 @@
 
     function highlightKamatzKatan(text, chap, vIdx) {
         let formatted = text;
+        
         const targets = [
             {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>", originalTextPart: "מַלְכוֹ"}, 
             {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ", originalTextPart: "יָפְיָהּ"}, 
@@ -327,6 +339,7 @@
         }
     }
 
+    // הוספנו משתנה שמזהה האם זה אזור של טעמים וניקוד כדי להגדיל אותו
     function renderTextToElement(area, isDual, isChumashMode = false) {
         area.innerHTML = '';
         const dataWithNikkud = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
@@ -334,9 +347,9 @@
         
         let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
         
-        // כשהפונט הלא מנוקד מופיע בתצוגה הכפולה - נדחס את הגודל שלו מעט (ב-8%)
-        if (isDual && !isChumashMode) {
-            size = size * 0.92;
+        // הגדלת הפונט ב-2 נקודות (0.2rem) עבור התיבה עם הניקוד
+        if (isChumashMode) {
+            size += 0.15; 
         }
         
         area.style.fontSize = size + 'rem';
@@ -409,7 +422,7 @@
             col1.className = `column mode-chumash`; 
             const inner1 = document.createElement('div');
             inner1.className = 'text-content';
-            renderTextToElement(inner1, true, true); 
+            renderTextToElement(inner1, true, true); // true = שולח הודעה שזה חומש/ניקוד כדי שיגדיל ב-2
             col1.appendChild(inner1);
             grid.appendChild(col1);
 
@@ -417,7 +430,7 @@
             col2.className = `column mode-megillah`; 
             const inner2 = document.createElement('div');
             inner2.className = 'text-content';
-            renderTextToElement(inner2, true, false); 
+            renderTextToElement(inner2, true, false); // false = גודל רגיל
             col2.appendChild(inner2);
             grid.appendChild(col2);
 
@@ -462,13 +475,12 @@
         
         document.querySelectorAll('.text-content').forEach(el => {
             const isDual = el.closest('.dual-view-container') !== null;
+            // בודק אם התיבה הנוכחית היא של הניקוד
             const isChumashMode = el.closest('.mode-chumash') !== null;
             
             let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
-            
-            // שומר על יחס ההקטנה גם כשלוחצים על זום במצב שתי עמודות
-            if (isDual && !isChumashMode) {
-                size = size * 0.92;
+            if (isChumashMode) {
+                size += 0.15; // שומר על הפער של +2 נקודות גם כשמגדילים/מקטינים
             }
             
             el.style.fontSize = size + 'rem';
