@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>קול המגילה - הכנה למבצעים</title>
+    <title>קול המגילה</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
     
@@ -44,7 +44,6 @@
         header h1 { margin: 0; font-family: 'Frank Ruhl Libre', serif; font-size: 2.5rem; flex: 1; text-align: right; }
         header h2 { margin: 0; color: var(--accent-color); font-size: 1rem; flex: 1; text-align: left; font-weight: 400; line-height: 1.4; }
 
-        /* סרגל פרקים - תיקון הצגה לנייד */
         .top-nav-bar {
             background-color: #fff;
             position: sticky; top: 0; z-index: 100;
@@ -72,11 +71,10 @@
         }
 
         .instructions-hint {
-            text-align: center; font-size: 0.9rem; color: #666;
+            text-align: center; font-size: 1rem; color: #444;
             margin: 15px 0 5px 0; font-weight: bold;
         }
 
-        /* עיצוב המגילה והעמודות */
         .tikkun-wrapper { 
             max-width: 1000px; margin: 20px auto; padding: 0 20px;
         }
@@ -105,11 +103,9 @@
         .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; display: inline; }
         .pasuk.playing-now { background-color: var(--playing-bg); border-bottom: 3px solid var(--accent-color); }
 
-        /* ניהול מצבי תצוגה */
         .mode-chumash .text-without { display: none; }
         .mode-megillah .text-with, .mode-megillah .verse-num { display: none; }
         
-        /* כפתורי שליטה צפים */
         .floating-controls {
             position: fixed; bottom: calc(var(--bottom-bar-height) + 20px);
             left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1001;
@@ -117,12 +113,22 @@
 
         .f-btn {
             background: var(--accent-color); color: var(--primary-color);
-            border: none; padding: 12px 18px; border-radius: 50px;
+            border: none; padding: 12px 22px; border-radius: 50px;
             font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;
-            font-family: 'Heebo', sans-serif;
+            font-family: 'Heebo', sans-serif; font-size: 1rem;
         }
 
-        /* נגן תחתון */
+        /* כפתורי מעבר בתחתית */
+        .bottom-nav-btns {
+            display: flex; justify-content: center; gap: 20px; margin-top: 30px; padding: 20px 0;
+        }
+        .nav-btn {
+            background: var(--primary-color); color: white; border: none;
+            padding: 10px 25px; border-radius: 8px; cursor: pointer;
+            font-weight: bold; font-family: 'Heebo', sans-serif;
+        }
+        .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+
         .bottom-player-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
             background-color: var(--primary-color); height: var(--bottom-bar-height);
@@ -145,31 +151,17 @@
             min-width: 45px; text-align: center;
         }
 
-        /* הודעת התראה */
         #scrollToast {
             position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.85); color: white; padding: 10px 20px;
             border-radius: 25px; font-size: 0.85rem; display: none; z-index: 2001;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* התאמות לנייד */
         @media (max-width: 768px) {
             header { flex-direction: column; padding: 15px; text-align: center; }
-            header h1 { font-size: 2rem; text-align: center; }
-            header h2 { text-align: center; font-size: 0.9rem; margin-top: 10px; }
+            header h1 { font-size: 2rem; }
+            header h2 { font-size: 0.9rem; }
             .dual-view-container { grid-template-columns: 1fr; }
-            .dual-mode-btn { display: none; } /* נסתיר מבט כפול בנייד במצב אנכי */
-            .f-btn { padding: 10px 15px; font-size: 0.85rem; }
-        }
-
-        /* הצגת מבט כפול בטלפון לרוחב */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .dual-view-container { grid-template-columns: 1fr 1fr; }
-            .dual-mode-btn { display: block; }
-            header { padding: 5px 20px; }
-            header h1 { font-size: 1.5rem; }
-            header h2 { display: none; }
         }
     </style>
 </head>
@@ -184,17 +176,18 @@
         <div class="chapter-nav" id="chapterNav"></div>
     </nav>
 
-    <div class="instructions-hint">כאשר לוחצים על פסוק זה מדלג לשמיעת הפסוק המסוים שלחצת.</div>
+    <div class="instructions-hint">לשמיעה – לחצו על הפסוק</div>
 
     <div class="floating-controls">
-        <button class="f-btn dual-mode-btn" id="dualViewBtn" onclick="toggleDualMode()">צפייה בשתי עמודות</button>
-        <button class="f-btn" id="modeToggleBtn" onclick="toggleMode()">ללא ניקוד וטעמים</button>
+        <button class="f-btn" id="mainCycleBtn" onclick="cycleDisplayMode()">למצב מגילה</button>
     </div>
 
     <main class="tikkun-wrapper" id="mainWrapper">
         <div id="dualContainer" class="column mode-chumash">
             <div class="text-content" id="textContentArea"></div>
         </div>
+        <!-- כפתורי ניווט יתווספו כאן דינמית -->
+        <div class="bottom-nav-btns" id="bottomNav"></div>
     </main>
 
     <div id="scrollToast">לא ניתן לגלול מפני שמוגדר על מצב גלילה אוטומטית. אם ברצונך לגלול בטל את הלחצן "גלילה אוטומטית".</div>
@@ -219,17 +212,14 @@
         </div>
     </div>
 
-    <!-- 1. טעינת המידע מקובץ חיצוני - וודא שהקובץ קיים בתיקייה -->
     <script src="megillahData.js"></script>
 
-    <!-- 2. קוד האתר -->
     <script>
-        // הגדרות התחלתיות
-        let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; // טקסט מעט קטן יותר בברירת מחדל בנייד
+        // 0 = חומש, 1 = מגילה, 2 = שתי עמודות
+        let displayMode = 0; 
+        let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
         let currentChapter = 1;
-        let isDualMode = false;
-        let isChumashMode = true;
-        let isAutoScroll = false; // מתחיל כגלילה ידנית
+        let isAutoScroll = false; 
         let currentSpeedIdx = 0;
         const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 0.8];
         const audio = document.getElementById('megillahAudio');
@@ -237,7 +227,6 @@
         const svgPlay = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
         const svgPause = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
 
-        // יצירת כפתורי הפרקים
         function setupNav() {
             const nav = document.getElementById('chapterNav');
             const letters = ["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
@@ -251,30 +240,46 @@
             }
         }
 
-        // ניקוי ניקוד וטעמים
+        // פונקציית ניקוי ניקוד משופרת
         function stripNikkud(t) {
-            return t.replace(/[\u0591-\u05C7]/g, '').replace(/[־\-()]/g, ' ').replace(/[ספ:]/g, '').trim();
+            // 1. הסרת ניקוד וטעמים
+            let clean = t.replace(/[\u0591-\u05C7]/g, '');
+            // 2. החלפת מקף ברווח
+            clean = clean.replace(/־/g, ' ');
+            // 3. הסרת 'פ' ו-'ס' רק אם הן עומדות לבד (מוקפות ברווחים או סוף פסוק)
+            clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
+            return clean.trim();
         }
 
-        // טעינת פרק
         function loadChapter(num) {
+            if (num < 1 || num > 10) return;
             currentChapter = num;
             document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
-            renderText();
+            applyLayout();
+            updateBottomNav();
             audio.src = `./audio/chap${num}.mp3`;
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
-        // רינדור הטקסט למסך
-        function renderText() {
-            const area = document.getElementById('textContentArea');
-            if(!area) return;
-            area.innerHTML = '';
-            area.style.fontSize = currentFontSize + 'rem';
-            
-            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
-            if(!data) return;
+        function updateBottomNav() {
+            const bottomNav = document.getElementById('bottomNav');
+            bottomNav.innerHTML = `
+                <button class="nav-btn" ${currentChapter === 1 ? 'disabled' : ''} onclick="loadChapter(${currentChapter - 1})">פרק הקודם</button>
+                <button class="nav-btn" ${currentChapter === 10 ? 'disabled' : ''} onclick="loadChapter(${currentChapter + 1})">פרק הבא</button>
+            `;
+        }
 
+        function cycleDisplayMode() {
+            displayMode = (displayMode + 1) % 3;
+            const btn = document.getElementById('mainCycleBtn');
+            const labels = ["למצב מגילה", "למצב עמודות", "למצב חומש"];
+            btn.innerText = labels[displayMode];
+            applyLayout();
+        }
+
+        function renderTextToElement(area) {
+            area.innerHTML = '';
+            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
             data.forEach((item, idx) => {
                 const span = document.createElement('span');
                 span.className = 'pasuk';
@@ -294,62 +299,54 @@
             });
         }
 
-        // החלפת מצב ניקוד
-        function toggleMode() {
-            isChumashMode = !isChumashMode;
-            isDualMode = false;
-            applyLayout();
-        }
-
-        // החלפת מצב עמודות (מבט כפול)
-        function toggleDualMode() {
-            isDualMode = !isDualMode;
-            applyLayout();
-        }
-
         function applyLayout() {
             const wrapper = document.getElementById('mainWrapper');
-            const modeBtn = document.getElementById('modeToggleBtn');
-            const dualBtn = document.getElementById('dualViewBtn');
+            const dualContainer = document.getElementById('dualContainer');
+            
+            // איפוס מבנה בסיסי
+            wrapper.innerHTML = ''; 
+            const textDiv = document.createElement('div');
+            textDiv.id = 'textContentArea';
+            textDiv.className = 'text-content';
+            textDiv.style.fontSize = currentFontSize + 'rem';
 
-            if (isDualMode) {
-                const contentHtml = document.getElementById('textContentArea').innerHTML;
-                wrapper.innerHTML = `
-                    <div class="dual-view-container">
-                        <div class="column mode-chumash">
-                            <div class="text-content" style="font-size:${currentFontSize}rem">${contentHtml}</div>
-                        </div>
-                        <div class="column mode-megillah">
-                            <div class="text-content" style="font-size:${currentFontSize}rem">${contentHtml}</div>
-                        </div>
-                    </div>`;
-                modeBtn.style.display = 'none';
-                dualBtn.innerText = "תצוגה רגילה";
-                attachPasukEvents();
+            if (displayMode === 2) {
+                // מצב עמודות
+                const grid = document.createElement('div');
+                grid.className = 'dual-view-container';
+                
+                const col1 = document.createElement('div');
+                col1.className = 'column mode-chumash';
+                const area1 = textDiv.cloneNode();
+                renderTextToElement(area1);
+                col1.appendChild(area1);
+                
+                const col2 = document.createElement('div');
+                col2.className = 'column mode-megillah';
+                const area2 = textDiv.cloneNode();
+                renderTextToElement(area2);
+                col2.appendChild(area2);
+                
+                grid.appendChild(col1);
+                grid.appendChild(col2);
+                wrapper.appendChild(grid);
             } else {
-                wrapper.innerHTML = `
-                    <div id="dualContainer" class="column ${isChumashMode ? 'mode-chumash' : 'mode-megillah'}">
-                        <div class="text-content" id="textContentArea" style="font-size:${currentFontSize}rem"></div>
-                    </div>`;
-                modeBtn.style.display = 'block';
-                modeBtn.innerText = isChumashMode ? "ללא ניקוד וטעמים" : "עם ניקוד וטעמים";
-                dualBtn.innerText = "צפייה בשתי עמודות";
-                renderText();
+                // מצב חומש (0) או מגילה (1)
+                const col = document.createElement('div');
+                col.className = 'column ' + (displayMode === 0 ? 'mode-chumash' : 'mode-megillah');
+                renderTextToElement(textDiv);
+                col.appendChild(textDiv);
+                wrapper.appendChild(col);
             }
+            
+            // הוספה מחדש של כפתורי הניווט
+            const nav = document.createElement('div');
+            nav.id = 'bottomNav';
+            nav.className = 'bottom-nav-btns';
+            wrapper.appendChild(nav);
+            updateBottomNav();
         }
 
-        function attachPasukEvents() {
-            document.querySelectorAll('.pasuk').forEach(p => {
-                p.onclick = () => {
-                    const idx = p.dataset.index;
-                    const time = megillahData[currentChapter][idx].time;
-                    audio.currentTime = time;
-                    audio.play();
-                };
-            });
-        }
-
-        // גלילה אוטומטית
         function toggleAutoScroll() {
             isAutoScroll = !isAutoScroll;
             const btn = document.getElementById('scrollToggleBtn');
@@ -358,7 +355,6 @@
             btn.style.color = isAutoScroll ? "var(--primary-color)" : "white";
         }
 
-        // התראה אם מנסים לגלול במצב אוטומטי
         const showToast = () => {
             if(!isAutoScroll) return;
             const t = document.getElementById('scrollToast');
@@ -370,9 +366,8 @@
         window.addEventListener('wheel', showToast);
         window.addEventListener('touchstart', showToast);
 
-        // סנכרון טקסט עם השמע
         function syncText() {
-            const data = megillahData[currentChapter] || [];
+            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
             let activeIdx = -1;
             for (let i = 0; i < data.length; i++) {
                 if (audio.currentTime >= data[i].time) activeIdx = i;
@@ -390,7 +385,6 @@
             }
         }
 
-        // שינוי גודל טקסט עם תיקון באג הנייד
         function changeFontSize(d) {
             currentFontSize += d * 0.15;
             if(currentFontSize < 1.2) currentFontSize = 1.2;
