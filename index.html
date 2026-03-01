@@ -29,6 +29,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             padding-bottom: var(--bottom-bar-height);
+            overflow-x: hidden;
         }
 
         header {
@@ -41,45 +42,50 @@
         }
 
         header h1 { margin: 0; font-family: 'Frank Ruhl Libre', serif; font-size: 2.5rem; flex: 1; text-align: right; }
-        header h2 { margin: 0; color: var(--accent-color); font-size: 1rem; flex: 1; text-align: left; font-weight: 400; }
+        header h2 { margin: 0; color: var(--accent-color); font-size: 1rem; flex: 1; text-align: left; font-weight: 400; line-height: 1.4; }
 
-        /* תיקון תפריט פרקים בטלפון */
+        /* סרגל פרקים - תיקון הצגה לנייד */
         .top-nav-bar {
             background-color: #fff;
             position: sticky; top: 0; z-index: 100;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             overflow-x: auto;
             display: flex;
-            justify-content: flex-start; /* מבטיח שפרק א' לא ייעלם */
+            justify-content: flex-start;
             padding: 10px;
+            -webkit-overflow-scrolling: touch;
         }
 
-        .chapter-nav { display: flex; gap: 8px; padding-right: 10px; }
+        .chapter-nav { display: flex; gap: 8px; padding-right: 10px; padding-left: 20px; }
 
         .chapter-btn {
             background-color: #f8f8f8; color: var(--primary-color);
             border: 1px solid #ddd; padding: 8px 15px;
             border-radius: 8px; cursor: pointer;
-            font-weight: 600; white-space: nowrap;
+            font-weight: 600; white-space: nowrap; transition: 0.2s;
         }
 
-        .chapter-btn.active { background-color: var(--accent-color); border-color: var(--accent-color); }
+        .chapter-btn.active { 
+            background-color: var(--accent-color); 
+            border-color: var(--accent-color);
+            color: var(--primary-color);
+        }
 
         .instructions-hint {
             text-align: center; font-size: 0.9rem; color: #666;
-            margin-top: 15px; font-weight: bold;
+            margin: 15px 0 5px 0; font-weight: bold;
         }
 
-        /* מצב עמודות */
+        /* עיצוב המגילה והעמודות */
         .tikkun-wrapper { 
             max-width: 1000px; margin: 20px auto; padding: 0 20px;
-            display: flex; flex-direction: column; gap: 20px;
         }
 
         .dual-view-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+            width: 100%;
         }
 
         .column { 
@@ -88,17 +94,22 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
         }
 
-        .text-content { font-family: 'Guttman Stam', serif; line-height: 2; text-align: justify; }
+        .text-content { 
+            font-family: 'Guttman Stam', serif; 
+            line-height: 2; 
+            text-align: justify; 
+            word-wrap: break-word;
+        }
         
-        .verse-num { color: #999; font-size: 0.55em; margin-left: 8px; font-family: 'Heebo', sans-serif; }
-        .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; }
+        .verse-num { color: #999; font-size: 0.55em; margin-left: 8px; font-family: 'Heebo', sans-serif; font-weight: normal; }
+        .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; display: inline; }
         .pasuk.playing-now { background-color: var(--playing-bg); border-bottom: 3px solid var(--accent-color); }
 
-        /* הסתרת אלמנטים לפי מצב */
+        /* ניהול מצבי תצוגה */
         .mode-chumash .text-without { display: none; }
         .mode-megillah .text-with, .mode-megillah .verse-num { display: none; }
         
-        /* כפתור צף */
+        /* כפתורי שליטה צפים */
         .floating-controls {
             position: fixed; bottom: calc(var(--bottom-bar-height) + 20px);
             left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1001;
@@ -108,6 +119,7 @@
             background: var(--accent-color); color: var(--primary-color);
             border: none; padding: 12px 18px; border-radius: 50px;
             font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;
+            font-family: 'Heebo', sans-serif;
         }
 
         /* נגן תחתון */
@@ -115,44 +127,49 @@
             position: fixed; bottom: 0; left: 0; right: 0;
             background-color: var(--primary-color); height: var(--bottom-bar-height);
             z-index: 1000; display: flex; justify-content: center; align-items: center;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
         }
 
         .player-content { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 800px; padding: 0 20px; }
         
         .main-play-btn {
-            background: var(--accent-color); border: none; width: 60px; height: 60px;
+            background: var(--accent-color); border: none; width: 62px; height: 62px;
             border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .main-play-btn svg { width: 30px; height: 30px; fill: var(--primary-color); }
 
         .mini-btn {
             background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
             padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.85rem;
+            min-width: 45px; text-align: center;
         }
 
-        /* התראת גלילה */
+        /* הודעת התראה */
         #scrollToast {
             position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); color: white; padding: 10px 20px;
-            border-radius: 20px; font-size: 0.8rem; display: none; z-index: 2001;
+            background: rgba(0,0,0,0.85); color: white; padding: 10px 20px;
+            border-radius: 25px; font-size: 0.85rem; display: none; z-index: 2001;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
+        /* התאמות לנייד */
         @media (max-width: 768px) {
-            header { flex-direction: column; padding: 15px; }
-            header h1 { font-size: 1.8rem; text-align: center; }
-            header h2 { text-align: center; font-size: 0.9rem; }
-            .dual-view-container { grid-template-columns: 1fr; } /* בטלפון תמיד עמודה אחת אלא אם נגדיר אחרת */
-            .dual-mode-btn { display: none; } /* הסתרת כפתור מבט כפול בטלפון במצב אנכי */
+            header { flex-direction: column; padding: 15px; text-align: center; }
+            header h1 { font-size: 2rem; text-align: center; }
+            header h2 { text-align: center; font-size: 0.9rem; margin-top: 10px; }
+            .dual-view-container { grid-template-columns: 1fr; }
+            .dual-mode-btn { display: none; } /* נסתיר מבט כפול בנייד במצב אנכי */
+            .f-btn { padding: 10px 15px; font-size: 0.85rem; }
         }
 
-        @media (min-width: 769px) {
-            .dual-mode-btn { display: block; }
-        }
-        
-        /* עיצוב למצב לרוחב בטלפון */
+        /* הצגת מבט כפול בטלפון לרוחב */
         @media (max-height: 500px) and (orientation: landscape) {
             .dual-view-container { grid-template-columns: 1fr 1fr; }
             .dual-mode-btn { display: block; }
+            header { padding: 5px 20px; }
+            header h1 { font-size: 1.5rem; }
+            header h2 { display: none; }
         }
     </style>
 </head>
@@ -163,14 +180,14 @@
         <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
     </header>
 
-    <nav class="top-nav-bar" id="navContainer">
+    <nav class="top-nav-bar">
         <div class="chapter-nav" id="chapterNav"></div>
     </nav>
 
-    <div class="instructions-hint">לחצו על פסוק כדי לדלג לשמיעה</div>
+    <div class="instructions-hint">כאשר לוחצים על פסוק זה מדלג לשמיעת הפסוק המסוים שלחצת.</div>
 
     <div class="floating-controls">
-        <button class="f-btn dual-mode-btn" onclick="toggleDualMode()">מבט כפול (חומש/מגילה)</button>
+        <button class="f-btn dual-mode-btn" id="dualViewBtn" onclick="toggleDualMode()">צפייה בשתי עמודות</button>
         <button class="f-btn" id="modeToggleBtn" onclick="toggleMode()">ללא ניקוד וטעמים</button>
     </div>
 
@@ -180,13 +197,13 @@
         </div>
     </main>
 
-    <div id="scrollToast">לא ניתן לגלול במצב גלילה אוטומטית. בטל כדי לגלול חופשי.</div>
+    <div id="scrollToast">לא ניתן לגלול מפני שמוגדר על מצב גלילה אוטומטית. אם ברצונך לגלול בטל את הלחצן "גלילה אוטומטית".</div>
 
     <audio id="megillahAudio" ontimeupdate="syncText()"></audio>
 
     <div class="bottom-player-bar">
         <div class="player-content">
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex:1;">
                 <button class="mini-btn" id="speedBtn" onclick="toggleSpeed()">⏱ 1x</button>
                 <button class="mini-btn" id="scrollToggleBtn" onclick="toggleAutoScroll()">גלילה ידנית</button>
             </div>
@@ -195,41 +212,32 @@
                 <div id="playBtnIcon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></div>
             </button>
 
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
                 <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
                 <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
             </div>
         </div>
     </div>
 
-    <!-- כאן יבוא הקישור לקובץ הנתונים החיצוני במציאות -->
-    <!-- <script src="megillahData.js"></script> -->
+    <!-- 1. טעינת המידע מקובץ חיצוני - וודא שהקובץ קיים בתיקייה -->
+    <script src="megillahData.js"></script>
 
+    <!-- 2. קוד האתר -->
     <script>
-        // בגלל שזה קובץ אחד כרגע, שמתי פה דגימה של הנתונים. 
-        // כשתפריד לקובץ חיצוני, תמחק את המשתנה megillahData מכאן.
-        const megillahData = {
-            1:[
-                { t: "(א) וַיְהִ֖י בִּימֵ֣י אֲחַשְׁוֵר֑וֹשׁ ה֣וּא אֲחַשְׁוֵר֗וֹשׁ הַמֹּלֵךְ֙ מֵהֹ֣דּוּ וְעַד־כּ֔וּשׁ שֶׁ֛בַע וְעֶשְׂרִ֥ים וּמֵאָ֖ה מְדִינָֽה:", time: 0 },
-                { t: "(ב) בַּיָּמִ֖ים הָהֵ֑ם כְּשֶׁ֣בֶת׀ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֗וֹשׁ עַ֚ל כִּסֵּ֣א מַלְכוּת֔וֹ אֲשֶׁ֖ר בְּשׁוּשַׁ֥ן הַבִּירָֽה:", time: 11 },
-                { t: "(ג) בִּשְׁנַ֤ת שָׁלוֹשׁ֙ לְמָלְכ֔וֹ עָשָׂ֣ה מִשְׁתֶּ֔ה לְכָל־שָׂרָ֖יו וַעֲבָדָ֑יו חֵ֣יל׀ פָּרַ֣ס וּמָדַ֗י הַֽפַּרְתְּמִ֛ים וְשָׂרֵ֥י הַמְּדִינ֖וֹת לְפָנָֽיו:", time: 19 },
-                { t: "(ד) בְּהַרְאֹת֗וֹ אֶת־עֹ֙שֶׁר֙ כְּב֣וֹד מַלְכוּת֔וֹ וְאֶ֨ת־יְקָ֔ר תִּפְאֶ֖רֶת גְּדוּלָּת֑וֹ יָמִ֣ים רַבִּ֔ים שְׁמוֹנִ֥ים וּמְאַ֖ת יֽוֹם:", time: 30 },
-                { t: "(ה) וּבִמְל֣וֹאת׀ הַיָּמִ֣ים הָאֵ֗לֶּה עָשָׂ֣ה הַמֶּ֡לֶךְ לְכָל־הָעָ֣ם הַנִּמְצְאִים֩ בְּשׁוּשַׁ֨ן הַבִּירָ֜ה לְמִגָּ֧דוֹל וְעַד־ קָטָ֛ן מִשְׁתֶּ֖ה שִׁבְעַת֙ יָמִ֑ים בַּחֲצַ֕ר גִּנַּ֥ת בִּיתַ֖ן הַמֶּֽלֶךְ:", time: 40 }
-                // המשך הנתונים...
-            ],
-            2:[ { t: "(א) אַחַר֙ הַדְּבָרִ֣ים הָאֵ֔לֶּה...", time: 0 } ]
-            // שאר הפרקים...
-        };
-
-        let currentFontSize = window.innerWidth < 768 ? 1.8 : 2.4; // גודל התחלתי קטן יותר לנייד
+        // הגדרות התחלתיות
+        let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; // טקסט מעט קטן יותר בברירת מחדל בנייד
         let currentChapter = 1;
         let isDualMode = false;
         let isChumashMode = true;
-        let isAutoScroll = false; // ברירת מחדל ידני
+        let isAutoScroll = false; // מתחיל כגלילה ידנית
         let currentSpeedIdx = 0;
         const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 0.8];
         const audio = document.getElementById('megillahAudio');
 
+        const svgPlay = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
+        const svgPause = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
+
+        // יצירת כפתורי הפרקים
         function setupNav() {
             const nav = document.getElementById('chapterNav');
             const letters = ["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
@@ -243,10 +251,12 @@
             }
         }
 
+        // ניקוי ניקוד וטעמים
         function stripNikkud(t) {
             return t.replace(/[\u0591-\u05C7]/g, '').replace(/[־\-()]/g, ' ').replace(/[ספ:]/g, '').trim();
         }
 
+        // טעינת פרק
         function loadChapter(num) {
             currentChapter = num;
             document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
@@ -255,12 +265,16 @@
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
+        // רינדור הטקסט למסך
         function renderText() {
             const area = document.getElementById('textContentArea');
+            if(!area) return;
             area.innerHTML = '';
             area.style.fontSize = currentFontSize + 'rem';
             
-            const data = megillahData[currentChapter] || [];
+            const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
+            if(!data) return;
+
             data.forEach((item, idx) => {
                 const span = document.createElement('span');
                 span.className = 'pasuk';
@@ -280,41 +294,47 @@
             });
         }
 
+        // החלפת מצב ניקוד
         function toggleMode() {
             isChumashMode = !isChumashMode;
             isDualMode = false;
             applyLayout();
         }
 
+        // החלפת מצב עמודות (מבט כפול)
         function toggleDualMode() {
             isDualMode = !isDualMode;
             applyLayout();
         }
 
         function applyLayout() {
-            const container = document.getElementById('dualContainer');
             const wrapper = document.getElementById('mainWrapper');
-            const btn = document.getElementById('modeToggleBtn');
+            const modeBtn = document.getElementById('modeToggleBtn');
+            const dualBtn = document.getElementById('dualViewBtn');
 
             if (isDualMode) {
+                const contentHtml = document.getElementById('textContentArea').innerHTML;
                 wrapper.innerHTML = `
                     <div class="dual-view-container">
                         <div class="column mode-chumash">
-                            <div class="text-content" style="font-size:${currentFontSize}rem">${document.getElementById('textContentArea').innerHTML}</div>
+                            <div class="text-content" style="font-size:${currentFontSize}rem">${contentHtml}</div>
                         </div>
                         <div class="column mode-megillah">
-                            <div class="text-content" style="font-size:${currentFontSize}rem">${document.getElementById('textContentArea').innerHTML}</div>
+                            <div class="text-content" style="font-size:${currentFontSize}rem">${contentHtml}</div>
                         </div>
                     </div>`;
-                btn.innerText = "חזור לתצוגה רגילה";
+                modeBtn.style.display = 'none';
+                dualBtn.innerText = "תצוגה רגילה";
                 attachPasukEvents();
             } else {
                 wrapper.innerHTML = `
                     <div id="dualContainer" class="column ${isChumashMode ? 'mode-chumash' : 'mode-megillah'}">
                         <div class="text-content" id="textContentArea" style="font-size:${currentFontSize}rem"></div>
                     </div>`;
+                modeBtn.style.display = 'block';
+                modeBtn.innerText = isChumashMode ? "ללא ניקוד וטעמים" : "עם ניקוד וטעמים";
+                dualBtn.innerText = "צפייה בשתי עמודות";
                 renderText();
-                btn.innerText = isChumashMode ? "ללא ניקוד וטעמים" : "עם ניקוד וטעמים";
             }
         }
 
@@ -329,6 +349,7 @@
             });
         }
 
+        // גלילה אוטומטית
         function toggleAutoScroll() {
             isAutoScroll = !isAutoScroll;
             const btn = document.getElementById('scrollToggleBtn');
@@ -337,20 +358,25 @@
             btn.style.color = isAutoScroll ? "var(--primary-color)" : "white";
         }
 
-        // זיהוי ניסיון גלילה ידנית במצב אוטומטי
-        window.addEventListener('wheel', (e) => { if(isAutoScroll) showScrollToast(); });
-        window.addEventListener('touchstart', (e) => { if(isAutoScroll) showScrollToast(); });
-
-        function showScrollToast() {
+        // התראה אם מנסים לגלול במצב אוטומטי
+        const showToast = () => {
+            if(!isAutoScroll) return;
             const t = document.getElementById('scrollToast');
             t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 2000);
-        }
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => t.style.display = 'none', 3000);
+        };
 
+        window.addEventListener('wheel', showToast);
+        window.addEventListener('touchstart', showToast);
+
+        // סנכרון טקסט עם השמע
         function syncText() {
-            const pesukim = megillahData[currentChapter] || [];
+            const data = megillahData[currentChapter] || [];
             let activeIdx = -1;
-            pesukim.forEach((p, i) => { if(audio.currentTime >= p.time) activeIdx = i; });
+            for (let i = 0; i < data.length; i++) {
+                if (audio.currentTime >= data[i].time) activeIdx = i;
+            }
             
             document.querySelectorAll('.pasuk').forEach(p => p.classList.remove('playing-now'));
             const activeSpans = document.querySelectorAll(`.pasuk[data-index="${activeIdx}"]`);
@@ -358,15 +384,17 @@
             if(activeSpans.length > 0) {
                 activeSpans.forEach(s => s.classList.add('playing-now'));
                 if(isAutoScroll) {
-                    // גלילה כך שהפסוק יהיה יחסית למעלה (150 פיקסלים מהקצה)
-                    window.scrollTo({ top: activeSpans[0].offsetTop - 150, behavior: 'smooth' });
+                    const offset = activeSpans[0].getBoundingClientRect().top + window.scrollY - 150;
+                    window.scrollTo({ top: offset, behavior: 'smooth' });
                 }
             }
         }
 
+        // שינוי גודל טקסט עם תיקון באג הנייד
         function changeFontSize(d) {
-            currentFontSize += d * 0.1; // שינוי עדין יותר למניעת באגים
-            if(currentFontSize < 1) currentFontSize = 1;
+            currentFontSize += d * 0.15;
+            if(currentFontSize < 1.2) currentFontSize = 1.2;
+            if(currentFontSize > 5) currentFontSize = 5;
             document.querySelectorAll('.text-content').forEach(el => el.style.fontSize = currentFontSize + 'rem');
         }
 
@@ -375,8 +403,8 @@
             else audio.pause();
         }
 
-        audio.onplay = () => document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
-        audio.onpause = () => document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
+        audio.onplay = () => document.getElementById('playBtnIcon').innerHTML = svgPause;
+        audio.onpause = () => document.getElementById('playBtnIcon').innerHTML = svgPlay;
 
         function toggleSpeed() {
             currentSpeedIdx = (currentSpeedIdx + 1) % playSpeeds.length;
