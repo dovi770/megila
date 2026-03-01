@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>קול המגילה - הכנה למבצעים</title>
+    <title>קול המגילה - הכנה למ מבצעים</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="קול המגילה">
 
-    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -17,14 +16,15 @@
             --primary-color: #0b1c2c;
             --accent-color: #d4af37;
             --text-color: #1a1a1a;
-            --highlight-bg: rgba(212, 175, 55, 0.4);
-            --playing-bg: rgba(11, 28, 44, 0.1);
-            --bottom-bar-height: 110px;
+            --playing-bg: rgba(11, 28, 44, 0.08);
+            --bottom-bar-height: 100px;
         }
 
         @font-face {
             font-family: 'Guttman Stam';
             src: url('./fonts/guttman-stam.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
         }
 
         body {
@@ -36,34 +36,47 @@
             padding-bottom: var(--bottom-bar-height);
         }
 
+        /* כותרת מפוצלת - ימין ושמאל */
         header {
             background-color: var(--primary-color);
-            color: white; text-align: center;
-            padding: 40px 20px 30px;
-            border-bottom: 5px solid var(--accent-color);
+            color: white;
+            padding: 20px 40px;
+            border-bottom: 4px solid var(--accent-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
             position: relative;
         }
 
         header h1 {
-            margin: 0; font-family: 'Frank Ruhl Libre', serif;
-            font-size: 3.5rem; font-weight: 900;
-            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            margin: 0;
+            font-family: 'Frank Ruhl Libre', serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            flex: 1;
+            text-align: right;
         }
 
         header h2 {
-            margin: 15px auto 0; color: var(--accent-color);
-            font-size: 1.1rem; font-weight: 400;
-            max-width: 800px; line-height: 1.5;
+            margin: 0;
+            color: var(--accent-color);
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.4;
+            flex: 1;
+            text-align: left;
         }
 
         .help-btn {
-            position: absolute; top: 15px; right: 15px;
-            background: var(--accent-color); border: none;
-            border-radius: 50%; width: 32px; height: 32px;
-            color: var(--primary-color); font-weight: bold; cursor: pointer;
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(212, 175, 55, 0.2); border: 1px solid var(--accent-color);
+            border-radius: 50%; width: 24px; height: 24px;
+            color: var(--accent-color); font-size: 14px; cursor: pointer;
         }
 
-        /* סרגל פרקים מתוקן */
+        /* סרגל פרקים */
         .top-nav-bar {
             background-color: #fff;
             padding: 10px 0;
@@ -71,24 +84,22 @@
             justify-content: center;
             overflow-x: auto;
             position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .chapter-nav {
-            display: flex; gap: 8px; padding: 0 15px;
-            margin: 0 auto;
-        }
+        .chapter-nav { display: flex; gap: 8px; padding: 0 15px; }
 
         .chapter-btn {
-            background-color: #f0f0f0; color: var(--primary-color);
-            border: 1px solid #ddd; padding: 8px 16px;
+            background-color: #f8f8f8; color: var(--primary-color);
+            border: 1px solid #ddd; padding: 8px 18px;
             border-radius: 8px; cursor: pointer;
-            font-weight: 600; white-space: nowrap;
+            font-weight: 600; white-space: nowrap; transition: 0.2s;
         }
 
         .chapter-btn.active {
             background-color: var(--accent-color);
             border-color: var(--accent-color);
+            color: var(--primary-color);
         }
 
         .chapter-btn .label-text::before { content: "פרק "; }
@@ -101,15 +112,36 @@
             background: var(--accent-color);
             color: var(--primary-color);
             border: none;
-            padding: 10px 18px;
+            padding: 12px 22px;
             border-radius: 50px;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             z-index: 1001;
             cursor: pointer;
-            font-family: 'Heebo', sans-serif;
             transition: 0.3s;
         }
+
+        /* עיצוב המגילה */
+        .tikkun-wrapper { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .column { background: white; padding: 40px; border-radius: 12px; border-bottom: 5px solid var(--accent-color); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .text-content { font-family: 'Guttman Stam', serif; font-size: 2.6rem; line-height: 2; text-align: justify; }
+        
+        /* עיצוב מספר פסוק */
+        .verse-num { 
+            color: #999; /* אפור */
+            font-size: 0.55em; 
+            margin-left: 8px; 
+            font-family: 'Heebo', sans-serif; 
+            font-weight: normal;
+        }
+
+        .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; }
+        .pasuk.playing-now { background-color: var(--playing-bg); border-bottom: 3px solid var(--accent-color); }
+
+        /* מצבי תצוגה */
+        .mode-megillah .text-with { display: none; }
+        .mode-megillah .verse-num { display: none; } /* הסתרת מספר פסוק במגילה */
+        .mode-chumash .text-without { display: none; }
 
         /* נגן תחתון */
         .bottom-player-bar {
@@ -118,74 +150,63 @@
             background-color: var(--primary-color);
             height: var(--bottom-bar-height);
             z-index: 1000;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
             display: flex;
             justify-content: center;
             align-items: center;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
         }
 
         .player-content {
             display: flex; align-items: center;
             justify-content: space-between;
-            width: 100%; max-width: 600px;
-            padding: 0 20px;
+            width: 100%; max-width: 700px;
+            padding: 0 30px;
         }
 
-        /* עיצוב כפתור הפעלה סימטרי */
+        /* לחצן הפעלה אלגנטי */
         .main-play-btn {
             background: var(--accent-color);
-            color: var(--primary-color);
             border: none;
-            width: 65px; height: 65px;
+            width: 68px; height: 68px;
             border-radius: 50%;
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            flex-shrink: 0;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: all 0.2s ease;
+            position: relative;
         }
 
-        /* תיקון אופטי למשולש הנגינה */
-        .play-icon { font-size: 2rem; margin-left: -4px; } /* הזזה קלה לימין לאיזון */
-        .pause-icon { font-size: 1.8rem; letter-spacing: -2px; font-weight: bold; }
+        .main-play-btn:hover { transform: scale(1.05); }
+        .main-play-btn:active { transform: scale(0.95); }
 
-        .side-controls { display: flex; gap: 10px; min-width: 100px; }
+        .main-play-btn svg {
+            width: 28px; height: 28px;
+            fill: var(--primary-color);
+        }
+
+        .side-controls { display: flex; gap: 12px; align-items: center; }
         .mini-btn {
-            background: rgba(255,255,255,0.1); color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 8px 12px; border-radius: 15px;
-            font-size: 0.85rem; cursor: pointer;
+            background: rgba(255,255,255,0.08); color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 14px; border-radius: 20px;
+            font-size: 0.9rem; cursor: pointer; transition: 0.2s;
         }
-
-        /* תוכן המגילה */
-        .tikkun-wrapper { max-width: 900px; margin: 20px auto; padding: 0 15px; }
-        .column { background: white; padding: 30px; border-radius: 12px; border-bottom: 5px solid var(--accent-color); }
-        .text-content { font-family: 'Guttman Stam', serif; font-size: 2.6rem; line-height: 2; text-align: justify; }
-        .pasuk { border-radius: 4px; padding: 0 3px; cursor: pointer; }
-        .pasuk.playing-now { background-color: var(--playing-bg); border-bottom: 3px solid var(--accent-color); }
-
-        .mode-megillah .text-with { display: none; }
-        .mode-chumash .text-without { display: none; }
-        
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;
-        }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; max-width: 400px; width: 90%; }
+        .mini-btn:hover { background: rgba(255,255,255,0.15); }
 
         @media (max-width: 768px) {
-            header h1 { font-size: 2.3rem; }
+            header { padding: 15px 20px; text-align: center; flex-direction: column; }
+            header h1 { text-align: center; font-size: 2.2rem; }
+            header h2 { text-align: center; margin-top: 10px; }
             .chapter-btn .label-text::before { content: ""; }
-            .chapter-btn { padding: 8px 14px; }
             .text-content { font-size: 1.8rem; }
-            .floating-mode-btn { font-size: 0.85rem; padding: 8px 14px; bottom: 130px; }
+            .floating-mode-btn { left: 10px; padding: 10px 15px; font-size: 0.9rem; bottom: 115px; }
             .player-content { padding: 0 15px; }
-            .side-controls { min-width: auto; }
         }
     </style>
 </head>
 <body>
 
-    <header id="top">
+    <header>
         <button class="help-btn" onclick="toggleInstructions(true)">?</button>
         <h1>קול המגילה</h1>
         <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
@@ -196,7 +217,7 @@
     </nav>
 
     <button class="floating-mode-btn" id="modeToggleBtn" onclick="toggleMode()">
-        מגילה (בלי טעמים)
+        ללא ניקוד וטעמים
     </button>
 
     <main class="tikkun-wrapper">
@@ -214,26 +235,30 @@
             </div>
 
             <button class="main-play-btn" id="playBtn" onclick="togglePlayPause()">
-                <span id="playIcon" class="play-icon">▶</span>
+                <div id="playBtnIcon">
+                    <!-- Play Icon SVG -->
+                    <svg viewBox="0 0 24 24" id="svgPlay"><path d="M8 5v14l11-7z"></path></svg>
+                </div>
             </button>
 
             <div class="side-controls">
                 <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
                 <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
-                <label class="mini-btn" style="display: flex; align-items: center; gap: 4px;">
+                <label class="mini-btn" style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem;">
                     <input type="checkbox" id="autoScrollCheck" checked> גלילה
                 </label>
             </div>
         </div>
     </div>
 
-    <div id="instructionsModal" class="modal" onclick="toggleInstructions(false)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>הוראות שימוש</h3>
+    <!-- הוראות -->
+    <div id="instructionsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;" onclick="toggleInstructions(false)">
+        <div class="modal-content" style="background:white; padding:25px; border-radius:15px; max-width:400px; width:90%;" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0;">הוראות שימוש</h3>
             <ul style="line-height: 1.6; padding-right: 20px;">
-                <li>לחצו על <b>פסוק</b> כדי לשמוע אותו.</li>
-                <li>הלחצן הצף בצד שמאל מחליף בין <b>חומש</b> ל<b>מגילה</b>.</li>
-                <li>הנגן התחתון מאפשר עצירה, שינוי מהירות ושינוי גודל כתב.</li>
+                <li>לחצו על <b>פסוק</b> כדי להתחיל לשמוע.</li>
+                <li>הלחצן הצף בצד שמאל מחליף בין מצב <b>חומש</b> למצב <b>מגילה</b>.</li>
+                <li>בנגן למטה ניתן לשנות את <b>מהירות הקריאה</b> ואת גודל הטקסט.</li>
             </ul>
             <button onclick="toggleInstructions(false)" style="width:100%; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px; cursor:pointer;">סגור</button>
         </div>
@@ -434,8 +459,11 @@
         let currentChapter = 1;
         let isChumashMode = true;
         let currentSpeedIdx = 0;
-        const playSpeeds = [1, 1.25, 1.5, 2, 0.8];
+        const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 0.8];
         const audio = document.getElementById('megillahAudio');
+
+        const svgPlay = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
+        const svgPause = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
 
         function setupNav() {
             const nav = document.getElementById('chapterNav');
@@ -460,12 +488,22 @@
                 span.className = 'pasuk';
                 span.dataset.index = idx;
                 span.onclick = () => { audio.currentTime = item.time; audio.play(); };
-                span.innerHTML = `<span class="text-with">${item.t}</span><span class="text-without">${stripNikkud(item.t)}</span> `;
+
+                // פירוק הטקסט למספר פסוק ותוכן
+                let text = item.t;
+                let verseMatch = text.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+                let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
+                let cleanText = verseMatch ? text.replace(verseMatch[1], '') : text;
+
+                span.innerHTML = `
+                    <span class="text-with">${verseHtml}${cleanText}</span>
+                    <span class="text-without">${stripNikkud(cleanText)}</span>
+                `;
                 content.appendChild(span);
             });
 
             audio.src = `./audio/chap${num}.mp3`;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
         function stripNikkud(t) {
@@ -477,16 +515,8 @@
             else audio.pause();
         }
 
-        audio.onplay = () => {
-            const icon = document.getElementById('playIcon');
-            icon.innerHTML = '||';
-            icon.className = 'pause-icon';
-        };
-        audio.onpause = () => {
-            const icon = document.getElementById('playIcon');
-            icon.innerHTML = '▶';
-            icon.className = 'play-icon';
-        };
+        audio.onplay = () => document.getElementById('playBtnIcon').innerHTML = svgPause;
+        audio.onpause = () => document.getElementById('playBtnIcon').innerHTML = svgPlay;
 
         function syncText() {
             const pesukim = megillahData[currentChapter] || [];
@@ -517,7 +547,7 @@
         function toggleMode() {
             isChumashMode = !isChumashMode;
             document.getElementById('textContainer').className = isChumashMode ? 'column mode-chumash' : 'column mode-megillah';
-            document.getElementById('modeToggleBtn').innerText = isChumashMode ? "מגילה (בלי טעמים)" : "חומש (עם טעמים)";
+            document.getElementById('modeToggleBtn').innerText = isChumashMode ? "ללא ניקוד וטעמים" : "עם ניקוד וטעמים";
         }
 
         function toggleInstructions(s) { document.getElementById('instructionsModal').style.display = s ? 'flex' : 'none'; }
@@ -525,7 +555,6 @@
         window.onload = () => {
             setupNav();
             loadChapter(1);
-            setTimeout(() => window.scrollTo(0,0), 100);
         };
     </script>
 </body>
