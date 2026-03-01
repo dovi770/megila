@@ -201,6 +201,7 @@
 </div>
 
 <script src="megillahData.js"></script>
+<script src="megillahDataNoNikkud.js"></script>
 
 <script>
     let displayMode = 0; 
@@ -258,12 +259,13 @@
         return formatted;
     }
 
-    function stripNikkud(t) {
-        let clean = t.replace(/[\u0591-\u05C7]/g, '');
-        clean = clean.replace(/[\u05BE-]/g, ' '); 
-        clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
-        return clean.trim();
-    }
+    // פונקציה זו כבר לא נחוצה מאחר שהטקסט ללא ניקוד מגיע מקובץ נפרד
+    // function stripNikkud(t) {
+    //     let clean = t.replace(/[\u0591-\u05C7]/g, '');
+    //     clean = clean.replace(/[\u05BE-]/g, ' '); 
+    //     clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
+    //     return clean.trim();
+    // }
 
     function loadChapter(num) {
         currentChapter = num;
@@ -299,11 +301,13 @@
 
     function renderTextToElement(area, isDual) {
         area.innerHTML = '';
-        const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
+        const dataWithNikkud = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
+        const dataNoNikkud = (typeof megillahDataNoNikkud !== 'undefined') ? megillahDataNoNikkud[currentChapter] : [];
+        
         const size = isDual ? (currentFontSize * 0.75) : currentFontSize;
         area.style.fontSize = size + 'rem';
 
-        data.forEach((item, idx) => {
+        dataWithNikkud.forEach((item, idx) => {
             const span = document.createElement('span');
             span.className = 'pasuk';
             span.dataset.index = idx;
@@ -311,14 +315,21 @@
                 if(!isSilentMode) { audio.currentTime = item.time; audio.play(); }
             };
 
-            let text = highlightKamatzKatan(item.t, currentChapter, idx);
-            let verseMatch = text.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+            let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
+            let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
             let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
-            let cleanWith = verseMatch ? text.replace(verseMatch[1], '') : text;
+            let cleanWithNikkud = verseMatch ? textWithNikkud.replace(verseMatch[1], '') : textWithNikkud;
+
+            // Get the text without nikkud from the separate data source
+            let textWithoutNikkud = '';
+            if (dataNoNikkud[idx]) {
+                let verseMatchNoNikkud = dataNoNikkud[idx].t.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+                textWithoutNikkud = verseMatchNoNikkud ? dataNoNikkud[idx].t.replace(verseMatchNoNikkud[1], '') : dataNoNikkud[idx].t;
+            }
 
             span.innerHTML = `
-                <span class="text-with">${verseHtml}${cleanWith}</span>
-                <span class="text-without">${stripNikkud(cleanWith)}</span>
+                <span class="text-with">${verseHtml}${cleanWithNikkud}</span>
+                <span class="text-without">${textWithoutNikkud}</span>
             `;
             area.appendChild(span);
         });
