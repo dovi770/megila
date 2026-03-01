@@ -96,7 +96,7 @@
     .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; display: inline; }
     .pasuk.playing-now { background-color: var(--playing-bg); border-bottom: 3px solid var(--accent-color); }
 
-.mode-chumash .text-without { display: none; }
+    .mode-chumash .text-without { display: none; }
     .mode-megillah .text-with, .mode-megillah .verse-num { display: none; }
     
     .floating-controls {
@@ -200,6 +200,7 @@
     </div>
 </div>
 
+<!-- טען קבצי הנתונים כאן -->
 <script src="megillahData.js"></script>
 <script src="megillahDataNoNikkud.js"></script>
 
@@ -217,7 +218,6 @@
     function showWelcomeScreen() {
         document.getElementById('welcomeOverlay').style.display = 'flex';
         document.getElementById('welcomeOverlay').style.opacity = '1';
-        // Reset the app state if necessary, e.g., pause audio
         audio.pause();
         audio.currentTime = 0;
     }
@@ -259,13 +259,16 @@
         return formatted;
     }
 
-    // פונקציה זו כבר לא נחוצה מאחר שהטקסט ללא ניקוד מגיע מקובץ נפרד
-    // function stripNikkud(t) {
-    //     let clean = t.replace(/[\u0591-\u05C7]/g, '');
-    //     clean = clean.replace(/[\u05BE-]/g, ' '); 
-    //     clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
-    //     return clean.trim();
-    // }
+    // פונקציה stripNikkud כבר לא נחוצה מאחר שהטקסט ללא ניקוד מגיע מקובץ נפרד
+    // לכן היא מוערת. אם אתה רואה אותה בקוד שלך, מחק אותה או הער אותה כך.
+    /*
+    function stripNikkud(t) {
+        let clean = t.replace(/[\u0591-\u05C7]/g, '');
+        clean = clean.replace(/[\u05BE-]/g, ' '); 
+        clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
+        return clean.trim();
+    }
+    */
 
     function loadChapter(num) {
         currentChapter = num;
@@ -307,6 +310,13 @@
         const size = isDual ? (currentFontSize * 0.75) : currentFontSize;
         area.style.fontSize = size + 'rem';
 
+        // בדיקת תקינות נתונים משופרת
+        if (!dataWithNikkud || !dataNoNikkud || dataWithNikkud.length !== dataNoNikkud.length) {
+            console.error("Error: Nikkud and No-Nikkud data arrays are missing or have different lengths for chapter", currentChapter);
+            area.innerHTML = "<h3>שגיאה בטעינת נתוני המגילה</h3><p>אנא וודא שקבצי הנתונים megillahData.js ו-megillahDataNoNikkud.js תקינים ומסונכרנים (אותו מספר פסוקים בכל פרק).</p>";
+            return;
+        }
+
         dataWithNikkud.forEach((item, idx) => {
             const span = document.createElement('span');
             span.className = 'pasuk';
@@ -316,20 +326,24 @@
             };
 
             let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
-            let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
-            let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
-            let cleanWithNikkud = verseMatch ? textWithNikkud.replace(verseMatch[1], '') : textWithNikkud;
+            let verseMatchWithNikkud = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+            let verseHtml = verseMatchWithNikkud ? `<span class="verse-num">${verseMatchWithNikkud[1]}</span>` : '';
+            let cleanWithNikkud = verseMatchWithNikkud ? textWithNikkud.replace(verseMatchWithNikkud[1], '') : textWithNikkud;
 
-            // Get the text without nikkud from the separate data source
-            let textWithoutNikkud = '';
-            if (dataNoNikkud[idx]) {
-                let verseMatchNoNikkud = dataNoNikkud[idx].t.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
-                textWithoutNikkud = verseMatchNoNikkud ? dataNoNikkud[idx].t.replace(verseMatchNoNikkud[1], '') : dataNoNikkud[idx].t;
+            // קבלת הטקסט ללא ניקוד מהמקור הנפרד
+            let textWithoutNikkudContent = '';
+            const itemNoNikkud = dataNoNikkud[idx]; 
+            
+            if (itemNoNikkud && itemNoNikkud.t) {
+                let verseMatchNoNikkud = itemNoNikkud.t.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+                textWithoutNikkudContent = verseMatchNoNikkud ? itemNoNikkud.t.replace(verseMatchNoNikkud[1], '') : itemNoNikkud.t;
+            } else {
+                console.warn(`Missing 't' property for no-nikkud item at chapter ${currentChapter}, index ${idx}. This verse might appear blank in no-nikkud mode.`);
             }
 
             span.innerHTML = `
                 <span class="text-with">${verseHtml}${cleanWithNikkud}</span>
-                <span class="text-without">${textWithoutNikkud}</span>
+                <span class="text-without">${textWithoutNikkudContent}</span>
             `;
             area.appendChild(span);
         });
@@ -361,26 +375,37 @@
     function applyLayout() {
         const wrapper = document.getElementById('mainWrapper');
         wrapper.innerHTML = ''; 
-        if (displayMode === 2) {
+        if (displayMode === 2) { // מצב שתי עמודות
             const grid = document.createElement('div');
             grid.className = 'dual-view-container';
-            [0, 1].forEach(m => {
-                const col = document.createElement('div');
-                col.className = `column ${m===0?'mode-chumash':'mode-megillah'}`;
-                const inner = document.createElement('div');
-                inner.className = 'text-content';
-                renderTextToElement(inner, true);
-                col.appendChild(inner);
-                grid.appendChild(col);
-            });
+            // עמודה ימנית - עם ניקוד וטעמים (mode-chumash)
+            const col1 = document.createElement('div');
+            col1.className = `column mode-chumash`; // מציג text-with
+            const inner1 = document.createElement('div');
+            inner1.className = 'text-content';
+            renderTextToElement(inner1, true); // true = תצוגה כפולה
+            col1.appendChild(inner1);
+            grid.appendChild(col1);
+
+            // עמודה שמאלית - ללא ניקוד וטעמים (mode-megillah)
+            const col2 = document.createElement('div');
+            col2.className = `column mode-megillah`; // מציג text-without
+            const inner2 = document.createElement('div');
+            inner2.className = 'text-content';
+            renderTextToElement(inner2, true); // true = תצוגה כפולה
+            col2.appendChild(inner2);
+            grid.appendChild(col2);
+
             wrapper.appendChild(grid);
-        } else {
+        } else { // מצב עמודה אחת
             const col = document.createElement('div');
+            // אם displayMode = 0 (עם ניקוד) -> mode-chumash
+            // אם displayMode = 1 (ללא ניקוד) -> mode-megillah
             col.className = `column ${displayMode===0?'mode-chumash':'mode-megillah'}`;
             const inner = document.createElement('div');
             inner.className = 'text-content';
             inner.id = 'textContentArea';
-            renderTextToElement(inner, false);
+            renderTextToElement(inner, false); // false = לא תצוגה כפולה
             col.appendChild(inner);
             wrapper.appendChild(col);
         }
