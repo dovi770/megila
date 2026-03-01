@@ -16,7 +16,8 @@
         --text-color: #1a1a1a;
         --playing-bg: rgba(11, 28, 44, 0.08);
         --bottom-bar-height: 110px;
-        --katan-color: #b22222;
+        /* צבע אדום מקורי לקמץ קטן - כבר לא בשימוש */
+        /* --katan-color: #b22222; */ 
     }
 
     @font-face {
@@ -95,7 +96,10 @@
 
     .text-content { font-family: 'Guttman Stam', serif; line-height: 2.2; text-align: justify; word-wrap: break-word; }
     
-    .k-katan { color: var(--katan-color); font-weight: normal; } /* קמץ קטן ללא הדגשה */
+    .k-katan { 
+        color: var(--accent-color); /* שינוי לצבע הכתום של האתר */
+        font-weight: normal; 
+    } 
     
     .verse-num { color: #999; font-size: 0.55em; margin-left: 8px; font-family: 'Heebo', sans-serif; }
     .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; display: inline; }
@@ -159,7 +163,6 @@
         }
 
         /* הגדרת תצוגת שתי עמודות נשארת 1fr 1fr גם במובייל */
-        /* אם עמודה אחת אחרי השנייה עדיין מופיעה, ייתכן שיש CSS אחר שדורס זאת. */
 
         .mini-btn { font-size: 0.7rem; padding: 5px 8px; }
         #welcomeOverlay h1 { font-size: 2.2rem; }
@@ -256,30 +259,53 @@
 
     function highlightKamatzKatan(text, chap, vIdx) {
         let formatted = text;
+        
+        // רשימת החלפות מדויקת לאותיות עם קמץ קטן, לפי פרק ופסוק.
+        // אנו מגדירים את ה'from' וה'to' כדי לצבוע רק את הקמץ קטן עצמו.
+        // ה'originalTextPart' משמש כדי לוודא שאנו מחליפים רק בתוך המילה הנכונה.
         const targets = [
-            {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>"}, // מלכו
-            {c:1, v:10, from:"יָ", to:"<span class='k-katan'>יָ</span>פְיָ"}, // יפיה - רק ראשונה
-            {c:1, v:16, from:"אָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
-            {c:2, v:11, from:"חֳ", to:"<span class='k-katan'>חֳ</span>"}, // חדשים
-            {c:2, v:19, from:"אָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמנה
-            {c:3, v:3, from:"אָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
-            {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>"}, // עשרו
-            {c:6, v:11, from:"יָּ", to:"יָּ<span class='k-katan'>שָׁ</span>"}, // וישב (הש' אחרי הי')
-            {c:8, v:3, from:"תָּ", to:"וַתָּ<span class='k-katan'>קָ</span>"}, // ותקם (הק' בקמץ)
-            {c:9, v:3, from:"שָׁ", to:"<span class='k-katan'>שָׁ</span>"}, // שמעו
-            {c:10, v:1, from:"תָּ", to:"<span class='k-katan'>תָּ</span>"} // תקפו
+            // פרק א
+            {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>", originalTextPart: "מַלְכוֹ"}, // מלכו
+            {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ", originalTextPart: "יָפְיָהּ"}, // יפיה - רק הראשונה
+            {c:1, v:16, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, // באמרם
+            // פרק ב
+            {c:2, v:11, from:"חֳ", to:"<span class='k-katan'>חֳ</span>", originalTextPart: "חֳדָשִׁים"}, // חדשים
+            {c:2, v:19, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאֱמֻנָה"}, // באמנה
+            // פרק ג
+            {c:3, v:3, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, // באמרם
+            // פרק ה
+            {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>", originalTextPart: "עָשְׁרוֹ"}, // עשרו
+            // פרק ו
+            {c:6, v:11, from:"יָּשָׁ", to:"יָּ<span class='k-katan'>שָׁ</span>", originalTextPart: "וַיָּשָׁב"}, // וישב
+            // פרק ח
+            {c:8, v:3, from:"קָ", to:"<span class='k-katan'>קָ</span>", originalTextPart: "וַתָּקָם"}, // ותקם (הק' בקמץ)
+            // פרק ט
+            {c:9, v:3, from:"שָׂ", to:"<span class='k-katan'>שָׂ</span>", originalTextPart: "שָׂרֵי"}, // שרי
+            // פרק י
+            {c:10, v:1, from:"תָּ", to:"<span class='k-katan'>תָּ</span>", originalTextPart: "תָּקְפּוֹ"} // תקפו
         ];
 
         targets.forEach(t => {
             if(chap === t.c && vIdx === t.v) {
-                formatted = formatted.replace(t.from, t.to);
+                if (t.originalTextPart) {
+                    // יוצרים regex למילה המלאה כדי למצוא אותה בפסוק
+                    const wordRegex = new RegExp(`\\b${t.originalTextPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'g');
+                    // מחליפים את המילה המלאה בפסוק, ובתוך ההחלפה של המילה, מחליפים את הקמץ קטן
+                    formatted = formatted.replace(wordRegex, (match) => {
+                        return match.replace(new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), t.to);
+                    });
+                } else {
+                    // אם אין originalTextPart (מילה מלאה), נחפש ישירות את הדפוס from
+                    // זה פחות מומלץ כי יכול לצבוע בטעות במילים אחרות
+                    const simpleRegex = new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+                    formatted = formatted.replace(simpleRegex, t.to);
+                }
             }
         });
         return formatted;
     }
 
     // פונקציה stripNikkud כבר לא נחוצה מאחר שהטקסט ללא ניקוד מגיע מקובץ נפרד
-    // לכן היא מוערת. אם אתה רואה אותה בקוד שלך, מחק אותה או הער אותה כך.
     /*
     function stripNikkud(t) {
         let clean = t.replace(/[\u0591-\u05C7]/g, '');
