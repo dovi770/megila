@@ -7,6 +7,15 @@
     <title>קול קורא המגילה</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+<!-- הוספת הפונט SBL Hebrew מ-Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=SBL+Hebrew&display=swap" rel="stylesheet">
+<!-- אם הפונט SBL Hebrew מאורח מקומית, ודא שהקובץ בנתיב הנכון והצהרת @font-face מוגדרת:
+@font-face {
+    font-family: 'SBL Hebrew';
+    src: url('./fonts/SBL_Hbrw.ttf') format('truetype');
+    font-weight: normal; font-style: normal;
+}
+-->
 
 <style>
     :root {
@@ -16,13 +25,11 @@
         --text-color: #1a1a1a;
         --playing-bg: rgba(11, 28, 44, 0.08);
         --bottom-bar-height: 110px;
-        /* צבע אדום מקורי לקמץ קטן - כבר לא בשימוש */
-        /* --katan-color: #b22222; */ 
     }
 
     @font-face {
-        font-family: 'SBL Hebrew';
-        src: url('./fonts/SBL Hebrew.ttf') format('truetype');
+        font-family: 'Guttman Stam';
+        src: url('./fonts/guttman-stam.ttf') format('truetype');
         font-weight: normal; font-style: normal;
     }
 
@@ -94,7 +101,21 @@
         border-bottom: 5px solid var(--accent-color); box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
     }
 
-    .text-content { font-family: 'guttman stam', serif; line-height: 2.2; text-align: justify; word-wrap: break-word; }
+    .text-content { 
+        line-height: 2.2; 
+        text-align: justify; 
+        word-wrap: break-word; 
+    }
+    
+    /* פונט לטקסט עם ניקוד וטעמים */
+    .mode-chumash .text-content {
+        font-family: 'SBL Hebrew', serif; 
+    }
+
+    /* פונט לטקסט ללא ניקוד וטעמים */
+    .mode-megillah .text-content {
+        font-family: 'Guttman Stam', serif; 
+    }
     
     .k-katan { 
         color: var(--accent-color); /* שינוי לצבע הכתום של האתר */
@@ -263,6 +284,7 @@
         // רשימת החלפות מדויקת לאותיות עם קמץ קטן, לפי פרק ופסוק.
         // אנו מגדירים את ה'from' וה'to' כדי לצבוע רק את הקמץ קטן עצמו.
         // ה'originalTextPart' משמש כדי לוודא שאנו מחליפים רק בתוך המילה הנכונה.
+        // ה'from' צריך לכלול את האות והניקוד המלא כדי להתאים בדיוק.
         const targets = [
             // פרק א
             {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>", originalTextPart: "מַלְכוֹ"}, // מלכו
@@ -276,27 +298,36 @@
             // פרק ה
             {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>", originalTextPart: "עָשְׁרוֹ"}, // עשרו
             // פרק ו
-            {c:6, v:11, from:"יָּשָׁ", to:"יָּ<span class='k-katan'>שָׁ</span>", originalTextPart: "וַיָּשָׁב"}, // וישב
+            // המילה המלאה היא "וַיָּשָׁב" והחלק שצבוע הוא הש' עם הקמץ
+            {c:6, v:11, from:"שָׁ", to:"<span class='k-katan'>שָׁ</span>", originalTextPart: "וַיָּשָׁב"}, 
             // פרק ח
-            {c:8, v:3, from:"קָ", to:"<span class='k-katan'>קָ</span>", originalTextPart: "וַתָּקָם"}, // ותקם (הק' בקמץ)
+            // המילה המלאה היא "וַתָּקָם" והחלק שצבוע הוא הק' עם הקמץ
+            {c:8, v:3, from:"קָ", to:"<span class='k-katan'>קָ</span>", originalTextPart: "וַתָּקָם"}, 
             // פרק ט
-            {c:9, v:3, from:"שָׂ", to:"<span class='k-katan'>שָׂ</span>", originalTextPart: "שָׂרֵי"}, // שרי
+            // המילה המלאה היא "שָׂרֵי" והחלק שצבוע הוא השׂ' עם הקמץ
+            {c:9, v:3, from:"שָׂ", to:"<span class='k-katan'>שָׂ</span>", originalTextPart: "שָׂרֵי"}, 
             // פרק י
-            {c:10, v:1, from:"תָּ", to:"<span class='k-katan'>תָּ</span>", originalTextPart: "תָּקְפּוֹ"} // תקפו
+            // המילה המלאה היא "תָּקְפּוֹ" והחלק שצבוע הוא התּ' עם הקמץ
+            {c:10, v:1, from:"תָּ", to:"<span class='k-katan'>תָּ</span>", originalTextPart: "תָּקְפּוֹ"} 
         ];
 
         targets.forEach(t => {
             if(chap === t.c && vIdx === t.v) {
                 if (t.originalTextPart) {
-                    // יוצרים regex למילה המלאה כדי למצוא אותה בפסוק
+                    // יוצרים regex למילה המלאה כדי למצוא אותה בפסוק.
+                    // חשוב להשתמש במילה המלאה כפי שהיא מופיעה ב-megillahData.js (עם ניקוד).
                     const wordRegex = new RegExp(`\\b${t.originalTextPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'g');
+                    
                     // מחליפים את המילה המלאה בפסוק, ובתוך ההחלפה של המילה, מחליפים את הקמץ קטן
                     formatted = formatted.replace(wordRegex, (match) => {
+                        // בתוך המילה שנמצאה (match), מחפשים את הדפוס הספציפי של הקמץ קטן (t.from)
+                        // ומוציאים אותו עם ה-<span> לצביעה (t.to).
+                        // יש לוודא שה-t.from תואם בדיוק לחלק מהמילה
                         return match.replace(new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), t.to);
                     });
                 } else {
                     // אם אין originalTextPart (מילה מלאה), נחפש ישירות את הדפוס from
-                    // זה פחות מומלץ כי יכול לצבוע בטעות במילים אחרות
+                    // זה פחות מומלץ כי יכול לצבוע בטעות במילים אחרות באותו פסוק שיש בהן דפוס דומה.
                     const simpleRegex = new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
                     formatted = formatted.replace(simpleRegex, t.to);
                 }
@@ -304,16 +335,6 @@
         });
         return formatted;
     }
-
-    // פונקציה stripNikkud כבר לא נחוצה מאחר שהטקסט ללא ניקוד מגיע מקובץ נפרד
-    /*
-    function stripNikkud(t) {
-        let clean = t.replace(/[\u0591-\u05C7]/g, '');
-        clean = clean.replace(/[\u05BE-]/g, ' '); 
-        clean = clean.replace(/\s[פס](\s|$|:)/g, ' ');
-        return clean.trim();
-    }
-    */
 
     function loadChapter(num) {
         currentChapter = num;
