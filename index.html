@@ -81,7 +81,12 @@
 
     .tikkun-wrapper { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
 
-    .dual-view-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+    .dual-view-container { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; /* תמיד שתי עמודות */
+        gap: 15px; 
+        width: 100%; 
+    }
 
     .column { 
         background: white; padding: 30px; border-radius: 12px; 
@@ -141,7 +146,21 @@
     @media (max-width: 768px) {
         header { flex-direction: column; padding: 15px; text-align: center; }
         header h1 { font-size: 1.8rem; }
-        .dual-view-container { grid-template-columns: 1fr; }
+        
+        /* שינוי לכפתורי מסך הפתיחה במובייל */
+        .welcome-btns { 
+            flex-direction: column; /* אחד מתחת לשני */
+            gap: 15px; /* רווח קטן יותר */
+            width: 80%; /* כדי לתת להם קצת רוחב */
+        }
+        .welcome-btn {
+            width: 100%; /* שימלאו את הרוחב הזמין */
+            box-sizing: border-box; /* כדי שהפאדינג לא יגרום לחריגה */
+        }
+
+        /* הגדרת תצוגת שתי עמודות נשארת 1fr 1fr גם במובייל */
+        /* אם עמודה אחת אחרי השנייה עדיין מופיעה, ייתכן שיש CSS אחר שדורס זאת. */
+
         .mini-btn { font-size: 0.7rem; padding: 5px 8px; }
         #welcomeOverlay h1 { font-size: 2.2rem; }
     }
@@ -239,11 +258,11 @@
         let formatted = text;
         const targets = [
             {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>"}, // מלכו
-            {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ"}, // יפיה - רק ראשונה
-            {c:1, v:16, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
+            {c:1, v:10, from:"יָ", to:"<span class='k-katan'>יָ</span>פְיָ"}, // יפיה - רק ראשונה
+            {c:1, v:16, from:"אָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
             {c:2, v:11, from:"חֳ", to:"<span class='k-katan'>חֳ</span>"}, // חדשים
-            {c:2, v:19, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמנה
-            {c:3, v:3, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
+            {c:2, v:19, from:"אָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמנה
+            {c:3, v:3, from:"אָ", to:"בְּ<span class='k-katan'>אָ</span>"}, // באמרם
             {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>"}, // עשרו
             {c:6, v:11, from:"יָּ", to:"יָּ<span class='k-katan'>שָׁ</span>"}, // וישב (הש' אחרי הי')
             {c:8, v:3, from:"תָּ", to:"וַתָּ<span class='k-katan'>קָ</span>"}, // ותקם (הק' בקמץ)
