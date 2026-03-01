@@ -118,7 +118,7 @@
     }
     
     .k-katan { 
-        color: var(--accent-color); /* שינוי לצבע הכתום של האתר */
+        color: var(--accent-color); 
         font-weight: normal; 
     } 
     
@@ -172,18 +172,15 @@
         header { flex-direction: column; padding: 15px; text-align: center; }
         header h1 { font-size: 1.8rem; }
         
-        /* שינוי לכפתורי מסך הפתיחה במובייל */
         .welcome-btns { 
-            flex-direction: column; /* אחד מתחת לשני */
-            gap: 15px; /* רווח קטן יותר */
-            width: 80%; /* כדי לתת להם קצת רוחב */
+            flex-direction: column; 
+            gap: 15px; 
+            width: 80%; 
         }
         .welcome-btn {
-            width: 100%; /* שימלאו את הרוחב הזמין */
-            box-sizing: border-box; /* כדי שהפאדינג לא יגרום לחריגה */
+            width: 100%; 
+            box-sizing: border-box; 
         }
-
-        /* הגדרת תצוגת שתי עמודות נשארת 1fr 1fr גם במובייל */
 
         .mini-btn { font-size: 0.7rem; padding: 5px 8px; }
         #welcomeOverlay h1 { font-size: 2.2rem; }
@@ -243,7 +240,6 @@
     </div>
 </div>
 
-<!-- טען קבצי הנתונים כאן -->
 <script src="megillahData.js"></script>
 <script src="megillahDataNoNikkud.js"></script>
 
@@ -281,53 +277,28 @@
     function highlightKamatzKatan(text, chap, vIdx) {
         let formatted = text;
         
-        // רשימת החלפות מדויקת לאותיות עם קמץ קטן, לפי פרק ופסוק.
-        // אנו מגדירים את ה'from' וה'to' כדי לצבוע רק את הקמץ קטן עצמו.
-        // ה'originalTextPart' משמש כדי לוודא שאנו מחליפים רק בתוך המילה הנכונה.
-        // ה'from' צריך לכלול את האות והניקוד המלא כדי להתאים בדיוק.
         const targets = [
-            // פרק א
-            {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>", originalTextPart: "מַלְכוֹ"}, // מלכו
-            {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ", originalTextPart: "יָפְיָהּ"}, // יפיה - רק הראשונה
-            {c:1, v:16, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, // באמרם
-            // פרק ב
-            {c:2, v:11, from:"חֳ", to:"<span class='k-katan'>חֳ</span>", originalTextPart: "חֳדָשִׁים"}, // חדשים
-            {c:2, v:19, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאֱמֻנָה"}, // באמנה
-            // פרק ג
-            {c:3, v:3, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, // באמרם
-            // פרק ה
-            {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>", originalTextPart: "עָשְׁרוֹ"}, // עשרו
-            // פרק ו
-            // המילה המלאה היא "וַיָּשָׁב" והחלק שצבוע הוא הש' עם הקמץ
+            {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>", originalTextPart: "מַלְכוֹ"}, 
+            {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ", originalTextPart: "יָפְיָהּ"}, 
+            {c:1, v:16, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, 
+            {c:2, v:11, from:"חֳ", to:"<span class='k-katan'>חֳ</span>", originalTextPart: "חֳדָשִׁים"}, 
+            {c:2, v:19, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאֱמֻנָה"}, 
+            {c:3, v:3, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, 
+            {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>", originalTextPart: "עָשְׁרוֹ"}, 
             {c:6, v:11, from:"שָׁ", to:"<span class='k-katan'>שָׁ</span>", originalTextPart: "וַיָּשָׁב"}, 
-            // פרק ח
-            // המילה המלאה היא "וַתָּקָם" והחלק שצבוע הוא הק' עם הקמץ
             {c:8, v:3, from:"קָ", to:"<span class='k-katan'>קָ</span>", originalTextPart: "וַתָּקָם"}, 
-            // פרק ט
-            // המילה המלאה היא "שָׂרֵי" והחלק שצבוע הוא השׂ' עם הקמץ
             {c:9, v:3, from:"שָׂ", to:"<span class='k-katan'>שָׂ</span>", originalTextPart: "שָׂרֵי"}, 
-            // פרק י
-            // המילה המלאה היא "תָּקְפּוֹ" והחלק שצבוע הוא התּ' עם הקמץ
             {c:10, v:1, from:"תָּ", to:"<span class='k-katan'>תָּ</span>", originalTextPart: "תָּקְפּוֹ"} 
         ];
 
         targets.forEach(t => {
             if(chap === t.c && vIdx === t.v) {
                 if (t.originalTextPart) {
-                    // יוצרים regex למילה המלאה כדי למצוא אותה בפסוק.
-                    // חשוב להשתמש במילה המלאה כפי שהיא מופיעה ב-megillahData.js (עם ניקוד).
                     const wordRegex = new RegExp(`\\b${t.originalTextPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'g');
-                    
-                    // מחליפים את המילה המלאה בפסוק, ובתוך ההחלפה של המילה, מחליפים את הקמץ קטן
                     formatted = formatted.replace(wordRegex, (match) => {
-                        // בתוך המילה שנמצאה (match), מחפשים את הדפוס הספציפי של הקמץ קטן (t.from)
-                        // ומוציאים אותו עם ה-<span> לצביעה (t.to).
-                        // יש לוודא שה-t.from תואם בדיוק לחלק מהמילה
                         return match.replace(new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), t.to);
                     });
                 } else {
-                    // אם אין originalTextPart (מילה מלאה), נחפש ישירות את הדפוס from
-                    // זה פחות מומלץ כי יכול לצבוע בטעות במילים אחרות באותו פסוק שיש בהן דפוס דומה.
                     const simpleRegex = new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
                     formatted = formatted.replace(simpleRegex, t.to);
                 }
@@ -368,18 +339,23 @@
         }
     }
 
-    function renderTextToElement(area, isDual) {
+    // הוספנו משתנה שמזהה האם זה אזור של טעמים וניקוד כדי להגדיל אותו
+    function renderTextToElement(area, isDual, isChumashMode = false) {
         area.innerHTML = '';
         const dataWithNikkud = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
         const dataNoNikkud = (typeof megillahDataNoNikkud !== 'undefined') ? megillahDataNoNikkud[currentChapter] : [];
         
-        const size = isDual ? (currentFontSize * 0.75) : currentFontSize;
+        let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
+        
+        // הגדלת הפונט ב-2 נקודות (0.2rem) עבור התיבה עם הניקוד
+        if (isChumashMode) {
+            size += 0.2; 
+        }
+        
         area.style.fontSize = size + 'rem';
 
-        // בדיקת תקינות נתונים משופרת
         if (!dataWithNikkud || !dataNoNikkud || dataWithNikkud.length !== dataNoNikkud.length) {
-            console.error("Error: Nikkud and No-Nikkud data arrays are missing or have different lengths for chapter", currentChapter);
-            area.innerHTML = "<h3>שגיאה בטעינת נתוני המגילה</h3><p>אנא וודא שקבצי הנתונים megillahData.js ו-megillahDataNoNikkud.js תקינים ומסונכרנים (אותו מספר פסוקים בכל פרק).</p>";
+            console.error("Error: Nikkud and No-Nikkud data arrays are missing or have different lengths");
             return;
         }
 
@@ -396,15 +372,12 @@
             let verseHtml = verseMatchWithNikkud ? `<span class="verse-num">${verseMatchWithNikkud[1]}</span>` : '';
             let cleanWithNikkud = verseMatchWithNikkud ? textWithNikkud.replace(verseMatchWithNikkud[1], '') : textWithNikkud;
 
-            // קבלת הטקסט ללא ניקוד מהמקור הנפרד
             let textWithoutNikkudContent = '';
             const itemNoNikkud = dataNoNikkud[idx]; 
             
             if (itemNoNikkud && itemNoNikkud.t) {
                 let verseMatchNoNikkud = itemNoNikkud.t.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
                 textWithoutNikkudContent = verseMatchNoNikkud ? itemNoNikkud.t.replace(verseMatchNoNikkud[1], '') : itemNoNikkud.t;
-            } else {
-                console.warn(`Missing 't' property for no-nikkud item at chapter ${currentChapter}, index ${idx}. This verse might appear blank in no-nikkud mode.`);
             }
 
             span.innerHTML = `
@@ -441,37 +414,35 @@
     function applyLayout() {
         const wrapper = document.getElementById('mainWrapper');
         wrapper.innerHTML = ''; 
-        if (displayMode === 2) { // מצב שתי עמודות
+        if (displayMode === 2) { 
             const grid = document.createElement('div');
             grid.className = 'dual-view-container';
-            // עמודה ימנית - עם ניקוד וטעמים (mode-chumash)
+            
             const col1 = document.createElement('div');
-            col1.className = `column mode-chumash`; // מציג text-with
+            col1.className = `column mode-chumash`; 
             const inner1 = document.createElement('div');
             inner1.className = 'text-content';
-            renderTextToElement(inner1, true); // true = תצוגה כפולה
+            renderTextToElement(inner1, true, true); // true = שולח הודעה שזה חומש/ניקוד כדי שיגדיל ב-2
             col1.appendChild(inner1);
             grid.appendChild(col1);
 
-            // עמודה שמאלית - ללא ניקוד וטעמים (mode-megillah)
             const col2 = document.createElement('div');
-            col2.className = `column mode-megillah`; // מציג text-without
+            col2.className = `column mode-megillah`; 
             const inner2 = document.createElement('div');
             inner2.className = 'text-content';
-            renderTextToElement(inner2, true); // true = תצוגה כפולה
+            renderTextToElement(inner2, true, false); // false = גודל רגיל
             col2.appendChild(inner2);
             grid.appendChild(col2);
 
             wrapper.appendChild(grid);
-        } else { // מצב עמודה אחת
+        } else { 
             const col = document.createElement('div');
-            // אם displayMode = 0 (עם ניקוד) -> mode-chumash
-            // אם displayMode = 1 (ללא ניקוד) -> mode-megillah
-            col.className = `column ${displayMode===0?'mode-chumash':'mode-megillah'}`;
+            const isChumashMode = displayMode === 0;
+            col.className = `column ${isChumashMode ? 'mode-chumash' : 'mode-megillah'}`;
             const inner = document.createElement('div');
             inner.className = 'text-content';
             inner.id = 'textContentArea';
-            renderTextToElement(inner, false); // false = לא תצוגה כפולה
+            renderTextToElement(inner, false, isChumashMode); 
             col.appendChild(inner);
             wrapper.appendChild(col);
         }
@@ -501,9 +472,18 @@
     function changeFontSize(d) {
         currentFontSize += d * 0.15;
         if(currentFontSize < 1.2) currentFontSize = 1.2;
+        
         document.querySelectorAll('.text-content').forEach(el => {
             const isDual = el.closest('.dual-view-container') !== null;
-            el.style.fontSize = (isDual ? currentFontSize * 0.75 : currentFontSize) + 'rem';
+            // בודק אם התיבה הנוכחית היא של הניקוד
+            const isChumashMode = el.closest('.mode-chumash') !== null;
+            
+            let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
+            if (isChumashMode) {
+                size += 0.2; // שומר על הפער של +2 נקודות גם כשמגדילים/מקטינים
+            }
+            
+            el.style.fontSize = size + 'rem';
         });
     }
 
