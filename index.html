@@ -7,15 +7,6 @@
     <title>קול קורא המגילה</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
-<!-- הוספת הפונט SBL Hebrew מ-Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=SBL+Hebrew&display=swap" rel="stylesheet">
-<!-- אם הפונט SBL-Hebrew מאורח מקומית, ודא שהקובץ בנתיב הנכון והצהרת @font-face מוגדרת:
-@font-face {
-    font-family: 'SBL Hebrew';
-    src: url('./fonts/SBL Hebrew.ttf') format('truetype');
-    font-weight: normal; font-style: normal;
-}
--->
 
 <style>
     :root {
@@ -30,6 +21,13 @@
     @font-face {
         font-family: 'Guttman Stam';
         src: url('./fonts/guttman-stam.ttf') format('truetype');
+        font-weight: normal; font-style: normal;
+    }
+
+    /* הפונט מוגדר כעת מקומית מתיקיית הפונטים שלך (גיטהאב) ולא מהאינטרנט */
+    @font-face {
+        font-family: 'SBL Hebrew';
+        src: url('./fonts/SBL-Hebrew.ttf') format('truetype');
         font-weight: normal; font-style: normal;
     }
 
@@ -65,9 +63,12 @@
         display: flex; justify-content: space-between; align-items: center;
     }
 
-    header h1 { margin: 0; font-family: 'Frank Ruhl Libre', serif; font-size: 2.5rem; flex: 1; text-align: right; cursor: pointer; }
-    header h2 { margin: 0; color: var(--accent-color); font-size: 1rem; flex: 1; text-align: left; font-weight: 400; line-height: 1.4; }
+    .header-text { display: flex; flex-direction: column; flex: 1; }
+    header h1 { margin: 0; font-family: 'Frank Ruhl Libre', serif; font-size: 2.5rem; text-align: right; cursor: pointer; }
+    header h2 { margin: 0; color: var(--accent-color); font-size: 1rem; text-align: right; font-weight: 400; line-height: 1.4; }
 
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    
     .top-nav-bar {
         background-color: #fff; position: sticky; top: 0; z-index: 100;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto;
@@ -165,22 +166,37 @@
 
     .mini-btn {
         background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
-        padding: 6px 10px; border-radius: 10px; cursor: pointer; font-size: 0.75rem; min-width: 50px;
+        padding: 6px 10px; border-radius: 10px; cursor: pointer; font-size: 0.75rem; min-width: 50px; font-family: 'Heebo', sans-serif;
     }
 
+    /* עיצוב חלונות קופצים (מודלים - צור קשר וניהול) */
+    .modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 10005; align-items: center; justify-content: center;
+    }
+    .modal-box {
+        background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px;
+        color: var(--text-color); box-shadow: 0 5px 20px rgba(0,0,0,0.3); max-height: 85vh; overflow-y: auto;
+    }
+    .modal-box h3 { margin-top: 0; color: var(--primary-color); font-family: 'Frank Ruhl Libre', serif; font-size: 1.8rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+    .close-modal { float: left; cursor: pointer; font-size: 1.5rem; color: #888; border: none; background: none; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Heebo', sans-serif; box-sizing: border-box; }
+    .submit-btn { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; }
+    
+    .admin-stats { margin-bottom: 20px; background: #f8f8f8; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+    .admin-stats p { margin: 5px 0; font-weight: bold; }
+    .data-list { list-style: none; padding: 0; margin: 0; font-size: 0.9rem; }
+    .data-list li { background: #fff; margin-bottom: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+
     @media (max-width: 768px) {
-        header { flex-direction: column; padding: 15px; text-align: center; }
-        header h1 { font-size: 1.8rem; }
+        header { flex-direction: column; padding: 15px; text-align: center; gap: 15px; }
+        .header-text { align-items: center; }
+        header h1, header h2 { text-align: center; }
         
-        .welcome-btns { 
-            flex-direction: column; 
-            gap: 15px; 
-            width: 80%; 
-        }
-        .welcome-btn {
-            width: 100%; 
-            box-sizing: border-box; 
-        }
+        .welcome-btns { flex-direction: column; gap: 15px; width: 80%; }
+        .welcome-btn { width: 100%; box-sizing: border-box; }
 
         .mini-btn { font-size: 0.7rem; padding: 5px 8px; }
         #welcomeOverlay h1 { font-size: 2.2rem; }
@@ -199,8 +215,14 @@
 </div>
 
 <header>
-    <h1 onclick="showWelcomeScreen()">קול קורא המגילה</h1>
-    <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
+    <div class="header-text">
+        <h1 onclick="showWelcomeScreen()">קול קורא המגילה</h1>
+        <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
+    </div>
+    <div class="header-actions">
+        <button class="mini-btn" onclick="openContactModal()">✉️ צור קשר</button>
+        <button class="mini-btn" onclick="openAdminLogin()" title="ניהול">⚙️</button>
+    </div>
 </header>
 
 <nav class="top-nav-bar">
@@ -240,10 +262,136 @@
     </div>
 </div>
 
+<!-- מודל צור קשר -->
+<div id="contactModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-modal" onclick="closeModals()">✖</button>
+        <h3>צור קשר עם ההנהלה</h3>
+        <div class="form-group">
+            <label>שם:</label>
+            <input type="text" id="contactName" placeholder="הכנס את שמך...">
+        </div>
+        <div class="form-group">
+            <label>הודעה:</label>
+            <textarea id="contactMessage" rows="4" placeholder="כתוב את הודעתך כאן..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="sendMessage()">שלח הודעה</button>
+    </div>
+</div>
+
+<!-- מודל ניהול מוסתר -->
+<div id="adminModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-modal" onclick="closeModals()">✖</button>
+        <h3>פאנל ניהול</h3>
+        <div class="admin-stats">
+            <p>👁️ סך כל הכניסות לאתר: <span id="adminVisits">0</span></p>
+            <p>🎧 סך כל ההשמעות (Play): <span id="adminPlays">0</span></p>
+            <button class="mini-btn" onclick="clearAdminData()" style="background: darkred; margin-top: 10px;">מחק נתונים</button>
+        </div>
+        
+        <h4>הודעות ממשתמשים:</h4>
+        <ul class="data-list" id="adminMessagesList" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px;">
+            <!-- הודעות יופיעו כאן -->
+        </ul>
+
+        <h4>היסטוריית השמעות אחרונות:</h4>
+        <ul class="data-list" id="adminPlaysList" style="max-height: 150px; overflow-y: auto;">
+            <!-- היסטוריה תופיע כאן -->
+        </ul>
+    </div>
+</div>
+
 <script src="megillahData.js"></script>
 <script src="megillahDataNoNikkud.js"></script>
 
 <script>
+    // הגדרת סיסמת המנהל (תוכל לשנות כאן למה שתרצה)
+    const ADMIN_PASSWORD = "1234";
+
+    // --- מערכת שמירת נתונים (סטטיסטיקות והודעות) ---
+    let appStats = JSON.parse(localStorage.getItem('megillahStats')) || { visits: 0, plays: [], messages:[] };
+    
+    function saveStats() {
+        localStorage.setItem('megillahStats', JSON.stringify(appStats));
+    }
+
+    // תיעוד כניסה לאתר
+    window.onload = () => {
+        appStats.visits += 1;
+        saveStats();
+    };
+
+    // תיעוד שליחת הודעה
+    function sendMessage() {
+        const name = document.getElementById('contactName').value;
+        const text = document.getElementById('contactMessage').value;
+        if(name.trim() === '' || text.trim() === '') {
+            alert("אנא מלא את כל השדות.");
+            return;
+        }
+        appStats.messages.push({
+            name: name,
+            text: text,
+            date: new Date().toLocaleString('he-IL')
+        });
+        saveStats();
+        alert("הודעתך נשלחה בהצלחה להנהלת האתר!");
+        document.getElementById('contactName').value = '';
+        document.getElementById('contactMessage').value = '';
+        closeModals();
+    }
+
+    // פתיחת מודל צור קשר
+    function openContactModal() {
+        document.getElementById('contactModal').style.display = 'flex';
+    }
+
+    // כניסה לפאנל ניהול
+    function openAdminLogin() {
+        const pass = prompt("נא להזין סיסמת מנהל:");
+        if (pass === ADMIN_PASSWORD) {
+            updateAdminDashboard();
+            document.getElementById('adminModal').style.display = 'flex';
+        } else if (pass !== null) {
+            alert("סיסמה שגויה.");
+        }
+    }
+
+    function updateAdminDashboard() {
+        document.getElementById('adminVisits').innerText = appStats.visits;
+        document.getElementById('adminPlays').innerText = appStats.plays.length;
+        
+        const msgList = document.getElementById('adminMessagesList');
+        msgList.innerHTML = '';
+        if(appStats.messages.length === 0) msgList.innerHTML = '<li>אין הודעות חדשות.</li>';
+        appStats.messages.slice().reverse().forEach(m => {
+            msgList.innerHTML += `<li><strong>${m.name} (${m.date}):</strong><br>${m.text}</li>`;
+        });
+
+        const playsList = document.getElementById('adminPlaysList');
+        playsList.innerHTML = '';
+        if(appStats.plays.length === 0) playsList.innerHTML = '<li>אין נתוני השמעות.</li>';
+        // מציג את 50 ההשמעות האחרונות
+        appStats.plays.slice(-50).reverse().forEach(p => {
+            playsList.innerHTML += `<li>תאריך: ${p.date} | פרק ${p.chapter} | שניה: ${p.time}</li>`;
+        });
+    }
+
+    function clearAdminData() {
+        if(confirm("האם אתה בטוח שברצונך למחוק את כל נתוני הסטטיסטיקה וההודעות?")) {
+            appStats = { visits: 0, plays: [], messages:[] };
+            saveStats();
+            updateAdminDashboard();
+        }
+    }
+
+    function closeModals() {
+        document.getElementById('contactModal').style.display = 'none';
+        document.getElementById('adminModal').style.display = 'none';
+    }
+    // --- סוף מערכת שמירת הנתונים ---
+
     let displayMode = 0; 
     let scrollMode = 0; 
     let isSilentMode = false;
@@ -251,7 +399,7 @@
     let currentChapter = 1;
     let currentPlaybackRate = 1;
     let currentSpeedIdx = 0;
-    const playSpeeds = [1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+    const playSpeeds =[1, 1.25, 1.5, 1.75, 2, 2.5, 3];
     const audio = document.getElementById('megillahAudio');
 
     function showWelcomeScreen() {
@@ -277,7 +425,7 @@
     function highlightKamatzKatan(text, chap, vIdx) {
         let formatted = text;
         
-        const targets = [
+        const targets =[
             {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>", originalTextPart: "מַלְכוֹ"}, 
             {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ", originalTextPart: "יָפְיָהּ"}, 
             {c:1, v:16, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, 
@@ -323,7 +471,7 @@
     function syncText() {
         if (isSilentMode) return;
 
-        const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
+        const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] :[];
         let activeIdx = -1;
         for (let i = 0; i < data.length; i++) { if (audio.currentTime >= data[i].time) activeIdx = i; }
         
@@ -339,15 +487,13 @@
         }
     }
 
-    // הוספנו משתנה שמזהה האם זה אזור של טעמים וניקוד כדי להגדיל אותו
     function renderTextToElement(area, isDual, isChumashMode = false) {
         area.innerHTML = '';
-        const dataWithNikkud = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] : [];
-        const dataNoNikkud = (typeof megillahDataNoNikkud !== 'undefined') ? megillahDataNoNikkud[currentChapter] : [];
+        const dataWithNikkud = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] :[];
+        const dataNoNikkud = (typeof megillahDataNoNikkud !== 'undefined') ? megillahDataNoNikkud[currentChapter] :[];
         
         let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
         
-        // הגדלת הפונט ב-2 נקודות (0.2rem) עבור התיבה עם הניקוד
         if (isChumashMode) {
             size += 0.15; 
         }
@@ -364,7 +510,10 @@
             span.className = 'pasuk';
             span.dataset.index = idx;
             span.onclick = () => { 
-                if(!isSilentMode) { audio.currentTime = item.time; audio.play(); }
+                if(!isSilentMode) { 
+                    audio.currentTime = item.time; 
+                    audio.play(); 
+                }
             };
 
             let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
@@ -391,7 +540,7 @@
     function cycleDisplayMode() {
         displayMode = (displayMode + 1) % 3;
         const btn = document.getElementById('mainCycleBtn');
-        const labels = ["לתצוגה ללא ניקוד וטעמים", "לתצוגת שתי עמודות", "לתצוגה עם ניקוד וטעמים"];
+        const labels =["לתצוגה ללא ניקוד וטעמים", "לתצוגת שתי עמודות", "לתצוגה עם ניקוד וטעמים"];
         btn.innerText = labels[displayMode];
         applyLayout();
     }
@@ -422,7 +571,7 @@
             col1.className = `column mode-chumash`; 
             const inner1 = document.createElement('div');
             inner1.className = 'text-content';
-            renderTextToElement(inner1, true, true); // true = שולח הודעה שזה חומש/ניקוד כדי שיגדיל ב-2
+            renderTextToElement(inner1, true, true); 
             col1.appendChild(inner1);
             grid.appendChild(col1);
 
@@ -430,7 +579,7 @@
             col2.className = `column mode-megillah`; 
             const inner2 = document.createElement('div');
             inner2.className = 'text-content';
-            renderTextToElement(inner2, true, false); // false = גודל רגיל
+            renderTextToElement(inner2, true, false);
             col2.appendChild(inner2);
             grid.appendChild(col2);
 
@@ -450,7 +599,7 @@
 
     function setupNav() {
         const nav = document.getElementById('chapterNav');
-        const letters = ["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
+        const letters =["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
         nav.innerHTML = '';
         for(let i=1; i<=10; i++) {
             const btn = document.createElement('button');
@@ -475,12 +624,11 @@
         
         document.querySelectorAll('.text-content').forEach(el => {
             const isDual = el.closest('.dual-view-container') !== null;
-            // בודק אם התיבה הנוכחית היא של הניקוד
             const isChumashMode = el.closest('.mode-chumash') !== null;
             
             let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
             if (isChumashMode) {
-                size += 0.15; // שומר על הפער של +2 נקודות גם כשמגדילים/מקטינים
+                size += 0.15;
             }
             
             el.style.fontSize = size + 'rem';
@@ -488,8 +636,22 @@
     }
 
     function togglePlayPause() { audio.paused ? audio.play() : audio.pause(); }
-    audio.onplay = () => document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
-    audio.onpause = () => document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
+    
+    audio.onplay = () => {
+        document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
+        
+        // תיעוד של השמעה למנהל - שומר את הפרק והשניה המדויקת שלוחצים Play
+        appStats.plays.push({
+            chapter: currentChapter,
+            time: Math.floor(audio.currentTime) + "s",
+            date: new Date().toLocaleString('he-IL')
+        });
+        saveStats();
+    };
+    
+    audio.onpause = () => {
+        document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
+    };
 </script>
 </body>
 </html>
