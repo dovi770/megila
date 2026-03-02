@@ -236,6 +236,7 @@
 
 <audio id="megillahAudio" ontimeupdate="syncText()"></audio>
 
+<!-- סרגל תחתון עבור בעלי קריאה -->
 <div class="bottom-player-bar" id="playerBar">
     <div class="player-content">
         <div style="display:flex; gap:8px; flex:1;">
@@ -245,6 +246,20 @@
         <button class="main-play-btn" onclick="togglePlayPause()">
             <div id="playBtnIcon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></div>
         </button>
+        <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
+            <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
+            <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
+        </div>
+    </div>
+</div>
+
+<!-- סרגל תחתון חדש עבור מעקב בציבור (מצב שומע) -->
+<div class="bottom-player-bar hidden" id="listenerBar">
+    <div class="player-content">
+        <div style="display:flex; gap:8px; flex:1;">
+            <button class="mini-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()">▶ גלילה אוטומטית</button>
+            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">💨 מהירות: 1</button>
+        </div>
         <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
             <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
             <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
@@ -297,9 +312,16 @@
 
 <script>
     // ==========================================
-    // הגדרת סיסמת המנהל לאתר
     // ==========================================
-    const ADMIN_PASSWORD = "332077643";
+    const ADMIN_PASS_HASH = "f33ef584161d349d906df37718453917299dd56fd43111e1fb1c4ef1f5afb019";
+
+    // פונקציית עזר להצפנת הסיסמה שמוקלדת לבדיקה מול הצופן השמור
+    async function hashString(str) {
+        const msgBuffer = new TextEncoder().encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
     // ==========================================
     // 🔴🔴🔴 הדבק את נתוני ה-Firebase שלך כאן 🔴🔴🔴
@@ -320,7 +342,6 @@
 
     // תיעוד כניסה לאתר מכל העולם
     window.onload = () => {
-        // הוספת צפייה אחת למונה הכולל של האתר
         db.ref('stats/visits').set(firebase.database.ServerValue.increment(1));
     };
 
@@ -333,7 +354,6 @@
             return;
         }
         
-        // שליחת ההודעה לענן
         db.ref('messages').push({
             name: name,
             text: text,
@@ -353,23 +373,25 @@
         document.getElementById('contactModal').style.display = 'flex';
     }
 
-    function openAdminLogin() {
+    // פתיחת פאנל הניהול עם בדיקת סיסמה מוצפנת
+    async function openAdminLogin() {
         const pass = prompt("נא להזין סיסמת מנהל:");
-        if (pass === ADMIN_PASSWORD) {
-            updateAdminDashboard(); // שואב נתונים בזמן אמת מהענן
-            document.getElementById('adminModal').style.display = 'flex';
-        } else if (pass !== null) {
-            alert("סיסמה שגויה.");
+        if (pass !== null) {
+            const hashed = await hashString(pass);
+            if (hashed === ADMIN_PASS_HASH) {
+                updateAdminDashboard(); 
+                document.getElementById('adminModal').style.display = 'flex';
+            } else {
+                alert("סיסמה שגויה.");
+            }
         }
     }
 
     function updateAdminDashboard() {
-        // משיכת כמות ביקורים
         db.ref('stats/visits').once('value').then(snap => {
             document.getElementById('adminVisits').innerText = snap.val() || 0;
         });
 
-        // משיכת הודעות (מוצג מהחדש לישן)
         db.ref('messages').once('value').then(snap => {
             const msgList = document.getElementById('adminMessagesList');
             msgList.innerHTML = '';
@@ -385,7 +407,6 @@
             }
         });
 
-        // משיכת היסטוריית השמעות (מגביל ל-50 האחרונות כדי לא להעמיס)
         db.ref('plays').limitToLast(50).once('value').then(snap => {
             const playsList = document.getElementById('adminPlaysList');
             playsList.innerHTML = '';
@@ -433,18 +454,58 @@
     const playSpeeds =[1, 1.25, 1.5, 1.75, 2, 2.5, 3];
     const audio = document.getElementById('megillahAudio');
 
+    // פונקציות גלילה אוטומטית לקריאה בציבור
+    let listenerAutoScrollInterval = null;
+    let isListenerScrolling = false;
+    let listenerScrollSpeedIdx = 0;
+    const listenerScrollSpeeds =[1, 1.5, 2.5, 4]; // מהירויות גלילה בפיקסלים
+
+    function toggleListenerScroll() {
+        isListenerScrolling = !isListenerScrolling;
+        const btn = document.getElementById('listenerScrollToggleBtn');
+        if (isListenerScrolling) {
+            btn.style.background = "var(--accent-color)";
+            btn.style.color = "var(--primary-color)";
+            btn.innerHTML = "⏸ עצור גלילה";
+            listenerAutoScrollInterval = setInterval(() => {
+                window.scrollBy(0, listenerScrollSpeeds[listenerScrollSpeedIdx]);
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+                    toggleListenerScroll(); // עצירה בסוף העמוד
+                }
+            }, 30);
+        } else {
+            btn.style.background = "rgba(255,255,255,0.1)";
+            btn.style.color = "white";
+            btn.innerHTML = "▶ גלילה אוטומטית";
+            clearInterval(listenerAutoScrollInterval);
+        }
+    }
+
+    function changeListenerScrollSpeed() {
+        listenerScrollSpeedIdx = (listenerScrollSpeedIdx + 1) % listenerScrollSpeeds.length;
+        document.getElementById('listenerSpeedBtn').innerText = '💨 מהירות: ' + (listenerScrollSpeedIdx + 1);
+    }
+
     function showWelcomeScreen() {
         document.getElementById('welcomeOverlay').style.display = 'flex';
         document.getElementById('welcomeOverlay').style.opacity = '1';
         audio.pause();
         audio.currentTime = 0;
+        if (isListenerScrolling) toggleListenerScroll();
     }
 
     function startApp(mode) {
         isSilentMode = (mode === 'listener');
+        
+        if (isSilentMode) {
+            displayMode = 0; // פתרון הבאג: כפיית תצוגה עם ניקוד תמיד במצב קריאה בציבור
+        }
+
         document.getElementById('playerBar').classList.toggle('hidden', isSilentMode);
+        document.getElementById('listenerBar').classList.toggle('hidden', !isSilentMode);
         document.getElementById('instructionsHint').classList.toggle('hidden', isSilentMode);
         document.getElementById('floatingControls').classList.toggle('hidden', isSilentMode);
+
         document.getElementById('welcomeOverlay').style.opacity = '0';
         setTimeout(() => { document.getElementById('welcomeOverlay').style.display = 'none'; }, 500);
         setupNav();
@@ -484,6 +545,10 @@
     }
 
     function loadChapter(num) {
+        if (isSilentMode && isListenerScrolling) {
+            toggleListenerScroll(); // עוצר את הגלילה במעבר פרק
+        }
+
         currentChapter = num;
         document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
         applyLayout();
@@ -652,7 +717,6 @@
     audio.onplay = () => {
         document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
         
-        // שליחת נתוני ההשמעה לשרת מכל משתמש בעולם
         db.ref('plays').push({
             chapter: currentChapter,
             time: Math.floor(audio.currentTime) + "s",
