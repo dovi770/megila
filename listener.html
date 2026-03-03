@@ -8,6 +8,64 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        /* === עיצוב תוספת הרעשן === */
+        .gragger-icon {
+            display: inline-block;
+            width: 1.2em;
+            height: 1.2em;
+            margin: 0 0.3em;
+            vertical-align: middle;
+            cursor: pointer;
+            /* ציור מובנה של רעשן */
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="20" y="10" width="24" height="24" fill="%23D2691E" stroke="%238B4513" stroke-width="2"/><rect x="29" y="34" width="6" height="26" fill="%238B4513"/><circle cx="32" cy="22" r="4" fill="%23FFD700"/></svg>') no-repeat center center;
+            background-size: contain;
+            opacity: 0.4;
+            filter: grayscale(80%);
+            transition: all 0.3s ease;
+        }
+        
+        /* מצב פעיל (לאחר לחיצה) */
+        .gragger-icon.active {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.3);
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            border-radius: 50%;
+        }
+
+        /* אנימציית סיבוב ורעש בזמן הניעור */
+        .gragger-icon.spinning {
+            animation: shake-gragger 0.15s infinite alternate ease-in-out;
+        }
+
+        @keyframes shake-gragger {
+            0% { transform: scale(1.3) rotate(-30deg); }
+            100% { transform: scale(1.3) rotate(30deg); }
+        }
+
+        /* הודעה צפה למשתמש (טוסט) */
+        .toast-notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 204, 0, 0.9);
+            color: #000;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-family: 'Heebo', sans-serif;
+            font-weight: bold;
+            font-size: 1rem;
+            z-index: 9999;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast-notification.show { opacity: 1; }
+    </style>
 </head>
 <body>
 
@@ -56,6 +114,9 @@
     </div>
 </div>
 
+<!-- הודעה צפה עבור חיישן הרעשן -->
+<div id="toast" class="toast-notification"></div>
+
 <script src="firebase-setup.js"></script>
 <script src="megillahData.js"></script>
 <script src="megillahDataNoNikkud.js"></script>
@@ -65,6 +126,12 @@
     let currentChapter = 1;
     let listenerAutoScrollInterval = null; let isListenerScrolling = false; let listenerScrollSpeedIdx = 0;
     const listenerScrollSpeeds =[1, 1.5, 2.5, 4]; 
+
+    // === הגדרות מערכת השמע של הרעשן ===
+    const graggerAudio = new Audio('gragger.mp3'); 
+    let isGraggerModeActive = false;
+    let currentActiveGraggerEl = null;
+    let lastAccX = null, lastAccY = null, lastAccZ = null;
 
     window.onload = () => { setupNav(); loadChapter(1); };
 
@@ -84,12 +151,12 @@
         }); return formatted;
     }
 
-    function loadChapter(num) {
-        if (isListenerScrolling) toggleListenerScroll();
-        currentChapter = num;
-        document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
-        applyLayout(); updateBottomNav();
-        window.scrollTo({ top: 0, behavior: 'instant' });
+    // === פונקציה חדשה: זיהוי "המן" עם תואר והוספת רעשן ===
+    function insertGraggers(text) {
+        // ביטוי רגולרי שמזהה את "המן" ואחריו "בן" / "האגגי" / "הרע" - תוך כדי התעלמות מכל ניקוד וטעם אפשרי
+        const hamanRegex = /(ה[\u0591-\u05C7]*מ[\u0591-\u05C7]*ן[\u0591-\u05C7]*(?:\s+|-)(?:ב[\u0591-\u05C7]*ן[\u0591-\u05C7]*|ה[\u0591-\u05C7]*א[\u0591-\u05C7]*ג[\u0591-\u05C7]*ג[\u0591-\u05C7]*י[\u0591-\u05C7]*|ה[\u0591-\u05C7]*ר[\u0591-\u05C7]*ע[\u0591-\u05C7]*))/g;
+        
+        return text.replace(hamanRegex, '$1 <span class="gragger-icon" onclick="activateGragger(this)" title="לחץ עלי ונער את הטלפון!"></span>');
     }
 
     function renderTextToElement(area) {
@@ -100,12 +167,120 @@
         dataWithNikkud.forEach((item, idx) => {
             const span = document.createElement('span'); span.className = 'pasuk';
             let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
+            
+            // הזרקת הרעשנים לטקסט
+            textWithNikkud = insertGraggers(textWithNikkud);
+            
             let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
             let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
             let clean = verseMatch ? textWithNikkud.replace(verseMatch[1], '') : textWithNikkud;
             span.innerHTML = `<span class="text-with">${verseHtml}${clean}</span>`;
             area.appendChild(span);
         });
+    }
+
+    // === לוגיקת הרעשן ושקשוק המכשיר ===
+    function activateGragger(element) {
+        // אם כבר הופעל, לחיצה נוספת תעשה רעש ידני
+        if (element.classList.contains('active')) {
+            triggerGraggerEffect();
+            return;
+        }
+
+        // בקשת רשות לחיישני תנועה (נדרש ב-iOS 13+)
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            DeviceMotionEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        enableShakeFeature(element);
+                    } else {
+                        showToast("הפעלה בשקשוק נחסמה. לחץ עלי כדי להרעיש!");
+                        enableClickOnlyFeature(element);
+                    }
+                })
+                .catch(console.error);
+        } else {
+            // מכשירים שלא דורשים אישור מיוחד
+            enableShakeFeature(element);
+        }
+    }
+
+    function enableShakeFeature(element) {
+        resetAllGraggers();
+        element.classList.add('active');
+        currentActiveGraggerEl = element;
+        isGraggerModeActive = true;
+        
+        showToast("נער את הטלפון עכשיו כדי להרעיש! 🪇");
+        
+        window.removeEventListener('devicemotion', handleMotion);
+        window.addEventListener('devicemotion', handleMotion);
+    }
+
+    function enableClickOnlyFeature(element) {
+        resetAllGraggers();
+        element.classList.add('active');
+        currentActiveGraggerEl = element;
+    }
+
+    function resetAllGraggers() {
+        document.querySelectorAll('.gragger-icon').forEach(el => el.classList.remove('active', 'spinning'));
+        isGraggerModeActive = false;
+        window.removeEventListener('devicemotion', handleMotion);
+    }
+
+    function handleMotion(event) {
+        if (!isGraggerModeActive || !currentActiveGraggerEl) return;
+
+        let acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        if (lastAccX !== null) {
+            let deltaX = Math.abs(acc.x - lastAccX);
+            let deltaY = Math.abs(acc.y - lastAccY);
+            let deltaZ = Math.abs(acc.z - lastAccZ);
+
+            // עוצמת הניעור (סף רגישות - ניתן לשנות את 15 לפי הצורך)
+            if (deltaX + deltaY + deltaZ > 15) {
+                triggerGraggerEffect();
+            }
+        }
+        lastAccX = acc.x; lastAccY = acc.y; lastAccZ = acc.z;
+    }
+
+    let effectTimeout;
+    function triggerGraggerEffect() {
+        // הפעלת שמע
+        if (graggerAudio.paused || graggerAudio.currentTime > 0.2) {
+            graggerAudio.currentTime = 0;
+            graggerAudio.play().catch(e => console.log("הדפדפן חסם שמע", e));
+        }
+
+        // הפעלת אנימציה
+        if (currentActiveGraggerEl) {
+            currentActiveGraggerEl.classList.add('spinning');
+            clearTimeout(effectTimeout);
+            effectTimeout = setTimeout(() => {
+                if(currentActiveGraggerEl) currentActiveGraggerEl.classList.remove('spinning');
+            }, 300); // האנימציה תעצור חצי שנייה אחרי הניעור האחרון
+        }
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    // ==========================================
+
+    function loadChapter(num) {
+        if (isListenerScrolling) toggleListenerScroll();
+        currentChapter = num;
+        document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
+        applyLayout(); updateBottomNav();
+        resetAllGraggers(); // איפוס רעשנים במעבר פרק
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
     function applyLayout() {
