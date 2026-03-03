@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול - קול קורא המגילה</title>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body style="background: var(--primary-color);">
+
+<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+    <div class="modal-box" id="adminBox" style="display: none;">
+        <button class="close-modal" onclick="window.location.href='index.html'">חזור לאתר</button>
+        <h3>פאנל ניהול (מחובר לענן)</h3>
+        <div class="admin-stats">
+            <p>👁️ סך כל הכניסות לאתר: <span id="adminVisits">טוען...</span></p>
+            <p>🎧 סך כל ההשמעות (Play): <span id="adminPlays">טוען...</span></p>
+            <button class="mini-btn" onclick="clearAdminData()" style="background: darkred; margin-top: 10px;">מחק את כל הנתונים</button>
+        </div>
+        
+        <h4>הודעות ממשתמשים:</h4>
+        <ul class="data-list" id="adminMessagesList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+            <li>טוען הודעות...</li>
+        </ul>
+
+        <h4>היסטוריית השמעות אחרונות:</h4>
+        <ul class="data-list" id="adminPlaysList" style="max-height: 200px; overflow-y: auto;">
+            <li>טוען היסטוריה...</li>
+        </ul>
+    </div>
+</div>
+
+<script src="firebase-setup.js"></script>
+<script>
+    const ADMIN_PASS_HASH = "f33ef584161d349d906df37718453917299dd56fd43111e1fb1c4ef1f5afb019";
+
+    async function hashString(str) {
+        const msgBuffer = new TextEncoder().encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    window.onload = async () => {
+        const pass = prompt("נא להזין סיסמת מנהל:");
+        if (pass !== null) {
+            const hashed = await hashString(pass);
+            if (hashed === ADMIN_PASS_HASH) {
+                document.getElementById('adminBox').style.display = 'block';
+                updateAdminDashboard();
+            } else {
+                alert("סיסמה שגויה.");
+                window.location.href = 'index.html';
+            }
+        } else {
+            window.location.href = 'index.html';
+        }
+    };
+
+    function updateAdminDashboard() {
+        db.ref('stats/visits').once('value').then(snap => document.getElementById('adminVisits').innerText = snap.val() || 0);
+
+        db.ref('messages').once('value').then(snap => {
+            const msgList = document.getElementById('adminMessagesList'); msgList.innerHTML = '';
+            const messages =[]; snap.forEach(c => messages.push(c.val()));
+            if(messages.length === 0) msgList.innerHTML = '<li>אין הודעות חדשות.</li>';
+            else messages.reverse().forEach(m => msgList.innerHTML += `<li><strong>${m.name} (${m.date}):</strong><br>${m.text}</li>`);
+        });
+
+        db.ref('plays').limitToLast(50).once('value').then(snap => {
+            const playsList = document.getElementById('adminPlaysList'); playsList.innerHTML = '';
+            const plays =[]; snap.forEach(c => plays.push(c.val()));
+            document.getElementById('adminPlays').innerText = plays.length >= 50 ? "50+" : plays.length;
+            if(plays.length === 0) playsList.innerHTML = '<li>אין נתוני השמעות כרגע.</li>';
+            else plays.reverse().forEach(p => playsList.innerHTML += `<li>תאריך: ${p.date} | פרק ${p.chapter} | שניה: ${p.time}</li>`);
+        });
+    }
+
+    function clearAdminData() {
+        if(confirm("האם אתה בטוח שברצונך למחוק את כל הנתונים במסד הנתונים בענן? לא ניתן לשחזר פעולה זו!")) {
+            db.ref('stats').remove(); db.ref('messages').remove(); db.ref('plays').remove();
+            alert("הנתונים נמחקו מהענן בהצלחה."); updateAdminDashboard();
+        }
+    }
+</script>
+</body>
+</html>
