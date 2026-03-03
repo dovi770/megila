@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        /* === עיצוב תוספת הרעשן === */
+        /* === עיצוב תוספת הרעשן הקטן בטקסט === */
         .gragger-icon {
             display: inline-block;
             width: 1.5em;
@@ -28,22 +28,46 @@
             display: block;
         }
         
-        /* מצב פעיל (לאחר לחיצה מוקדמת) */
+        /* מצב פעיל של הרעשן הקטן (מסמן שהוא מוכן לניעור) */
         .gragger-icon.active {
             background-color: rgba(255, 204, 0, 0.2);
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            transform: scale(1.1);
         }
 
-        /* אנימציית סיבוב בזמן הניעור בלבד */
-        .gragger-icon.spinning {
-            animation: shake-gragger 0.15s infinite alternate ease-in-out;
-            transform: scale(1.3);
+        /* === עיצוב הרעשן הענק שקופץ באמצע המסך === */
+        .big-gragger-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* רקע כהה חצי שקוף */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none; /* כדי שלא יפריע לגלילה אם מישהו מנסה לגעת */
+            transition: opacity 0.15s ease-out;
         }
 
-        @keyframes shake-gragger {
-            0% { transform: scale(1.3) rotate(-30deg); }
-            100% { transform: scale(1.3) rotate(30deg); }
+        .big-gragger-overlay.show {
+            opacity: 1;
+        }
+
+        .big-gragger-icon {
+            width: 250px;
+            height: 250px;
+            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.5));
+        }
+
+        /* האנימציה של הרעשן הענק בזמן ניעור */
+        .big-gragger-icon.spinning {
+            animation: shake-big-gragger 0.15s infinite alternate ease-in-out;
+        }
+
+        @keyframes shake-big-gragger {
+            0% { transform: scale(1) rotate(-35deg); }
+            100% { transform: scale(1.1) rotate(35deg); }
         }
 
         /* הודעה צפה למשתמש (טוסט) */
@@ -121,10 +145,21 @@
 <!-- הודעה צפה עבור חיישן הרעשן -->
 <div id="toast" class="toast-notification"></div>
 
-<!-- קבצים עם גרסה 4 כדי לעקוף שמירת מטמון -->
-<script src="firebase-setup.js?v=4"></script>
-<script src="megillahData.js?v=4"></script>
-<script src="megillahDataNoNikkud.js?v=4"></script>
+<!-- הרעשן הענק שקופץ באמצע המסך בזמן ניעור -->
+<div id="bigGraggerOverlay" class="big-gragger-overlay">
+    <div class="big-gragger-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+            <rect x="20" y="10" width="24" height="24" fill="#D2691E" stroke="#8B4513" stroke-width="2"/>
+            <rect x="29" y="34" width="6" height="26" fill="#8B4513"/>
+            <circle cx="32" cy="22" r="4" fill="#FFD700"/>
+        </svg>
+    </div>
+</div>
+
+<!-- קבצים עם גרסה 5 כדי לעקוף שמירת מטמון -->
+<script src="firebase-setup.js?v=5"></script>
+<script src="megillahData.js?v=5"></script>
+<script src="megillahDataNoNikkud.js?v=5"></script>
 
 <script>
     let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
@@ -140,7 +175,7 @@
     let isGraggerModeActive = false;
     let currentActiveGraggerEl = null;
     let lastAccX = null, lastAccY = null, lastAccZ = null;
-    let shakeStopTimeout = null; // טיימר לעצירת השמע כשמפסיקים לנענע
+    let shakeStopTimeout = null; 
 
     window.onload = () => { setupNav(); loadChapter(1); };
 
@@ -186,7 +221,7 @@
             area.appendChild(span);
         });
 
-        // בדיקה האם יש רעשנים בפרק הזה, ואם כן - הקפצת ההודעה הראשונה
+        // בדיקה האם יש רעשנים בפרק הזה, ואם כן - הקפצת ההודעה
         setTimeout(() => {
             if (document.querySelectorAll('.gragger-icon').length > 0) {
                 showToast("להרעשה עם רעשן וירטואלי - לחצו על הרעשן! 🪇", 4000);
@@ -194,9 +229,20 @@
         }, 800);
     }
 
+    // פונקציה לבדיקה האם אלמנט ספציפי נמצא כרגע פיזית בתוך שטח המסך של הצופה
+    function isElementInViewport(el) {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }
+
     // === לוגיקת הרעשן ושקשוק המכשיר ===
     function activateGragger(element) {
-        // שחרור חסימת שמע באופן "שקט" (ווליום 0) כדי שלא ירעיש בלחיצה
+        // שחרור חסימת שמע באופן "שקט" 
         graggerAudio.volume = 0;
         let playPromise = graggerAudio.play();
         if (playPromise !== undefined) {
@@ -208,11 +254,11 @@
 
         // אם כבר לחצו בעבר, לא צריך לבקש שוב הרשאה
         if (element.classList.contains('active')) {
-            showToast("נער את הטלפון עכשיו כדי להרעיש! 🪇", 2500);
+            showToast("מעולה! עכשיו נער את הטלפון כדי להרעיש 🪇", 2500);
             return;
         }
 
-        // בקשת רשות לחיישני תנועה (נדרש ב-iOS 13+)
+        // בקשת רשות לחיישני תנועה
         if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
             DeviceMotionEvent.requestPermission()
                 .then(permissionState => {
@@ -224,18 +270,16 @@
                 })
                 .catch(console.error);
         } else {
-            // מכשירים שלא דורשים אישור מיוחד (אנדרואיד)
             enableShakeFeature(element);
         }
     }
 
     function enableShakeFeature(element) {
         resetAllGraggers();
-        element.classList.add('active');
+        element.classList.add('active'); // מסמן את הרעשן הקטן כמוכן
         currentActiveGraggerEl = element;
         isGraggerModeActive = true;
         
-        // ההודעה השנייה: מעולה, עכשיו לנער!
         showToast("מעולה! עכשיו נער את הטלפון כדי להרעיש 🪇", 3500);
         
         window.removeEventListener('devicemotion', handleMotion);
@@ -243,14 +287,21 @@
     }
 
     function resetAllGraggers() {
-        document.querySelectorAll('.gragger-icon').forEach(el => el.classList.remove('active', 'spinning'));
+        document.querySelectorAll('.gragger-icon').forEach(el => el.classList.remove('active'));
         isGraggerModeActive = false;
-        stopGraggerEffect(); // מוודא שהקול נעצר
+        stopGraggerEffect(); 
         window.removeEventListener('devicemotion', handleMotion);
     }
 
     function handleMotion(event) {
         if (!isGraggerModeActive || !currentActiveGraggerEl) return;
+
+        // בדיקה קריטית: האם הרעשן הקטן נמצא כרגע מול העיניים במסך?
+        // אם לא - אנחנו עוצרים ומבטלים את הרעש
+        if (!isElementInViewport(currentActiveGraggerEl)) {
+            stopGraggerEffect();
+            return;
+        }
 
         let acc = event.accelerationIncludingGravity;
         if (!acc) return;
@@ -260,7 +311,6 @@
             let deltaY = Math.abs(acc.y - lastAccY);
             let deltaZ = Math.abs(acc.z - lastAccZ);
 
-            // עוצמת הניעור - ברגע שיש תזוזה, מפעיל את הרעשן
             if (deltaX + deltaY + deltaZ > 12) {
                 startGraggerEffect();
             }
@@ -268,30 +318,36 @@
         lastAccX = acc.x; lastAccY = acc.y; lastAccZ = acc.z;
     }
 
-    // מתחיל את הרעש והאנימציה (קורה שוב ושוב כל עוד מנערים)
+    // מתחיל את הרעש ואת אנימציית הרעשן הענק
     function startGraggerEffect() {
-        // מפעיל שמע רק אם הוא מושהה
+        // מפעיל שמע
         if (graggerAudio.paused) {
             graggerAudio.play().catch(e => console.log("Blocked:", e));
         }
 
-        if (currentActiveGraggerEl && !currentActiveGraggerEl.classList.contains('spinning')) {
-            currentActiveGraggerEl.classList.add('spinning');
+        // מקפיץ ומסובב את הרעשן הענק באמצע המסך
+        const bigOverlay = document.getElementById('bigGraggerOverlay');
+        const bigIcon = bigOverlay.querySelector('.big-gragger-icon');
+        
+        bigOverlay.classList.add('show');
+        if (!bigIcon.classList.contains('spinning')) {
+            bigIcon.classList.add('spinning');
         }
 
-        // מאפס את טיימר העצירה. אם במשך רבע שנייה אין תזוזה - זה יעצור הכל.
+        // מאפס טיימר. אם יש עצירה בניעור, זה מכבה.
         clearTimeout(shakeStopTimeout);
         shakeStopTimeout = setTimeout(stopGraggerEffect, 250);
     }
 
-    // עוצר את הרעש והאנימציה באופן מיידי
+    // עוצר את הרעש ומעלים את הרעשן הענק
     function stopGraggerEffect() {
         graggerAudio.pause();
-        // לא מאפסים ל-0 כדי שהרעש ימשיך בטבעיות בניעור הבא
         
-        if (currentActiveGraggerEl) {
-            currentActiveGraggerEl.classList.remove('spinning');
-        }
+        const bigOverlay = document.getElementById('bigGraggerOverlay');
+        const bigIcon = bigOverlay.querySelector('.big-gragger-icon');
+        
+        if (bigOverlay) bigOverlay.classList.remove('show');
+        if (bigIcon) bigIcon.classList.remove('spinning');
     }
 
     let toastTimeout;
