@@ -17,7 +17,6 @@
             height: 1.5em;
             margin: 0 0.3em;
             vertical-align: middle;
-            cursor: pointer;
             opacity: 1; 
             transition: all 0.3s ease;
         }
@@ -28,25 +27,17 @@
             display: block;
         }
         
-        /* מצב פעיל של הרעשן הקטן (מסמן שהוא מוכן לניעור) */
-        .gragger-icon.active {
-            background-color: rgba(255, 204, 0, 0.2);
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-            transform: scale(1.1);
-        }
-
         /* === עיצוב הרעשן הענק שקופץ באמצע המסך === */
         .big-gragger-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); /* רקע כהה חצי שקוף */
+            background: rgba(0, 0, 0, 0.6); 
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 10000;
             opacity: 0;
-            pointer-events: none; /* כדי שלא יפריע לגלילה אם מישהו מנסה לגעת */
+            pointer-events: none; 
             transition: opacity 0.15s ease-out;
         }
 
@@ -78,19 +69,20 @@
             transform: translateX(-50%);
             background: rgba(255, 204, 0, 0.95);
             color: #000;
-            padding: 10px 25px;
-            border-radius: 30px;
+            padding: 15px 25px;
+            border-radius: 20px;
             font-family: 'Heebo', sans-serif;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.4;
             text-align: center;
             z-index: 9999;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
-            width: 80%;
-            max-width: 400px;
+            width: 85%;
+            max-width: 450px;
         }
         .toast-notification.show { opacity: 1; }
     </style>
@@ -156,10 +148,10 @@
     </div>
 </div>
 
-<!-- קבצים עם גרסה 5 כדי לעקוף שמירת מטמון -->
-<script src="firebase-setup.js?v=5"></script>
-<script src="megillahData.js?v=5"></script>
-<script src="megillahDataNoNikkud.js?v=5"></script>
+<!-- קבצים עם גרסה 6 לעקיפת זיכרון מטמון -->
+<script src="firebase-setup.js?v=6"></script>
+<script src="megillahData.js?v=6"></script>
+<script src="megillahDataNoNikkud.js?v=6"></script>
 
 <script>
     let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
@@ -170,12 +162,71 @@
     // === הגדרות מערכת השמע של הרעשן ===
     const graggerAudio = new Audio('gragger.mp3'); 
     graggerAudio.preload = 'auto'; 
-    graggerAudio.loop = true; // כדי שהסאונד לא ייפסק באמצע ניעור ארוך
+    graggerAudio.loop = true; 
 
-    let isGraggerModeActive = false;
-    let currentActiveGraggerEl = null;
     let lastAccX = null, lastAccY = null, lastAccZ = null;
     let shakeStopTimeout = null; 
+    
+    // משתנים למעקב אוטומטי אחר הרעשנים על המסך
+    let isSystemUnlocked = false;
+    let visibleGraggersCount = 0;
+    let hasShownGraggerMessageThisChapter = false;
+
+    // === מנגנון פתיחת שמע וחיישנים אוטומטי במגע הראשון במסך ===
+    function unlockSystemInteractions() {
+        if (isSystemUnlocked) return;
+        
+        // פתיחת נעילת השמע של הדפדפן בשקט מוחלט
+        graggerAudio.volume = 0;
+        graggerAudio.play().then(() => {
+            graggerAudio.pause();
+            graggerAudio.volume = 1; // החזרה למצב רגיל אחרי שהמערכת נפתחה
+        }).catch(e => console.log("Audio unlock:", e));
+
+        // בקשת אישור לחיישן תנועה (עבור מכשירי iOS)
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            DeviceMotionEvent.requestPermission().then(permissionState => {
+                if (permissionState === 'granted') {
+                    isSystemUnlocked = true;
+                    window.addEventListener('devicemotion', handleMotion);
+                }
+            }).catch(console.error);
+        } else {
+            // לאנדרואיד / מכשירים אחרים
+            isSystemUnlocked = true;
+            window.addEventListener('devicemotion', handleMotion);
+        }
+
+        // מסיר את המאזין כי צריך לפתוח את הנעילה רק פעם אחת
+        document.removeEventListener('click', unlockSystemInteractions);
+        document.removeEventListener('touchstart', unlockSystemInteractions);
+    }
+    // מאזין לכל נגיעה במסך (למשל גלילה ראשונה) כדי לפתוח את הנעילה
+    document.addEventListener('click', unlockSystemInteractions);
+    document.addEventListener('touchstart', unlockSystemInteractions);
+
+
+    // === מנגנון צופה: בודק תמיד אילו רעשנים נראים עכשיו על המסך ===
+    const graggerObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                visibleGraggersCount++; // רעשן נכנס למסך
+                
+                // מקפיץ הודעה אם זה הרעשן הראשון שרואים בפרק הזה
+                if (!hasShownGraggerMessageThisChapter) {
+                    showToast("להפעלת הרעשן הוירטואלי ניתן לנענע את הטלפון אך ורק בזמן שקוראים את המן, ולא בזמן הקריאה שצריך לשמור על השקט.", 6000);
+                    hasShownGraggerMessageThisChapter = true;
+                }
+            } else {
+                visibleGraggersCount--; // רעשן יצא מהמסך
+                if (visibleGraggersCount <= 0) {
+                    visibleGraggersCount = 0;
+                    stopGraggerEffect(); // מכבה רעש אם עברנו את הפסוק תוך כדי ניעור
+                }
+            }
+        });
+    }, { threshold: 0.1 });
+
 
     window.onload = () => { setupNav(); loadChapter(1); };
 
@@ -195,10 +246,10 @@
         }); return formatted;
     }
 
-    // === פונקציה: החלפת ### ברעשן ===
+    // פונקציה: החלפת ### ברעשן חזותי (ללא כפתור לחיצה יותר)
     function insertGraggers(text) {
         const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="20" y="10" width="24" height="24" fill="#D2691E" stroke="#8B4513" stroke-width="2"/><rect x="29" y="34" width="6" height="26" fill="#8B4513"/><circle cx="32" cy="22" r="4" fill="#FFD700"/></svg>`;
-        const graggerHtml = `<span class="gragger-icon" onclick="activateGragger(this)">${svgIcon}</span>`;
+        const graggerHtml = `<span class="gragger-icon">${svgIcon}</span>`;
         return text.replace(/###/g, graggerHtml);
     }
 
@@ -211,7 +262,6 @@
             const span = document.createElement('span'); span.className = 'pasuk';
             let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
             
-            // הזרקת הרעשנים איפה שמופיע ###
             textWithNikkud = insertGraggers(textWithNikkud);
             
             let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
@@ -221,87 +271,16 @@
             area.appendChild(span);
         });
 
-        // בדיקה האם יש רעשנים בפרק הזה, ואם כן - הקפצת ההודעה
-        setTimeout(() => {
-            if (document.querySelectorAll('.gragger-icon').length > 0) {
-                showToast("להרעשה עם רעשן וירטואלי - לחצו על הרעשן! 🪇", 4000);
-            }
-        }, 800);
+        // מצמיד את הסורק לכל הרעשנים שנוצרו עכשיו על המסך
+        const newGraggers = document.querySelectorAll('.gragger-icon');
+        newGraggers.forEach(el => graggerObserver.observe(el));
     }
 
-    // פונקציה לבדיקה האם אלמנט ספציפי נמצא כרגע פיזית בתוך שטח המסך של הצופה
-    function isElementInViewport(el) {
-        const rect = el.getBoundingClientRect();
-        return (
-            rect.top >= 0 &&
-            rect.left >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-        );
-    }
 
-    // === לוגיקת הרעשן ושקשוק המכשיר ===
-    function activateGragger(element) {
-        // שחרור חסימת שמע באופן "שקט" 
-        graggerAudio.volume = 0;
-        let playPromise = graggerAudio.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                graggerAudio.pause();
-                graggerAudio.volume = 1; // החזרת הווליום למקסימום לקראת הניעור
-            }).catch(error => console.log("Audio silent unlock failed:", error));
-        }
-
-        // אם כבר לחצו בעבר, לא צריך לבקש שוב הרשאה
-        if (element.classList.contains('active')) {
-            showToast("מעולה! עכשיו נער את הטלפון כדי להרעיש 🪇", 2500);
-            return;
-        }
-
-        // בקשת רשות לחיישני תנועה
-        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-            DeviceMotionEvent.requestPermission()
-                .then(permissionState => {
-                    if (permissionState === 'granted') {
-                        enableShakeFeature(element);
-                    } else {
-                        showToast("הפעלה בשקשוק נחסמה. אין אפשרות להרעיש.");
-                    }
-                })
-                .catch(console.error);
-        } else {
-            enableShakeFeature(element);
-        }
-    }
-
-    function enableShakeFeature(element) {
-        resetAllGraggers();
-        element.classList.add('active'); // מסמן את הרעשן הקטן כמוכן
-        currentActiveGraggerEl = element;
-        isGraggerModeActive = true;
-        
-        showToast("מעולה! עכשיו נער את הטלפון כדי להרעיש 🪇", 3500);
-        
-        window.removeEventListener('devicemotion', handleMotion);
-        window.addEventListener('devicemotion', handleMotion);
-    }
-
-    function resetAllGraggers() {
-        document.querySelectorAll('.gragger-icon').forEach(el => el.classList.remove('active'));
-        isGraggerModeActive = false;
-        stopGraggerEffect(); 
-        window.removeEventListener('devicemotion', handleMotion);
-    }
-
+    // === טיפול בניעור הטלפון ===
     function handleMotion(event) {
-        if (!isGraggerModeActive || !currentActiveGraggerEl) return;
-
-        // בדיקה קריטית: האם הרעשן הקטן נמצא כרגע מול העיניים במסך?
-        // אם לא - אנחנו עוצרים ומבטלים את הרעש
-        if (!isElementInViewport(currentActiveGraggerEl)) {
-            stopGraggerEffect();
-            return;
-        }
+        // מתעלם לגמרי מהתנועה אם אין כרגע רעשן על המסך
+        if (visibleGraggersCount <= 0) return;
 
         let acc = event.accelerationIncludingGravity;
         if (!acc) return;
@@ -318,14 +297,11 @@
         lastAccX = acc.x; lastAccY = acc.y; lastAccZ = acc.z;
     }
 
-    // מתחיל את הרעש ואת אנימציית הרעשן הענק
     function startGraggerEffect() {
-        // מפעיל שמע
         if (graggerAudio.paused) {
             graggerAudio.play().catch(e => console.log("Blocked:", e));
         }
 
-        // מקפיץ ומסובב את הרעשן הענק באמצע המסך
         const bigOverlay = document.getElementById('bigGraggerOverlay');
         const bigIcon = bigOverlay.querySelector('.big-gragger-icon');
         
@@ -334,12 +310,10 @@
             bigIcon.classList.add('spinning');
         }
 
-        // מאפס טיימר. אם יש עצירה בניעור, זה מכבה.
         clearTimeout(shakeStopTimeout);
         shakeStopTimeout = setTimeout(stopGraggerEffect, 250);
     }
 
-    // עוצר את הרעש ומעלים את הרעשן הענק
     function stopGraggerEffect() {
         graggerAudio.pause();
         
@@ -363,9 +337,14 @@
     function loadChapter(num) {
         if (isListenerScrolling) toggleListenerScroll();
         currentChapter = num;
+        
+        // איפוס מונים במעבר פרק
+        visibleGraggersCount = 0;
+        hasShownGraggerMessageThisChapter = false;
+        stopGraggerEffect();
+        
         document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
         applyLayout(); updateBottomNav();
-        resetAllGraggers(); // איפוס רעשנים במעבר פרק
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
