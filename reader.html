@@ -8,6 +8,23 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        /* === עיצוב תוספת הרעשן הקטן בטקסט === */
+        .gragger-icon { display: inline-block; width: 1.5em; height: 1.5em; margin: 0 0.3em; vertical-align: middle; cursor: default; opacity: 1; transition: all 0.3s ease; }
+        .gragger-icon svg { width: 100%; height: 100%; display: block; }
+        .gragger-icon.active { background-color: rgba(255, 204, 0, 0.2); border-radius: 50%; box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); transform: scale(1.1); }
+        
+        /* === עיצוב הרעשן הענק שקופץ באמצע המסך === */
+        .big-gragger-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.15s ease-out; }
+        .big-gragger-overlay.show { opacity: 1; }
+        .big-gragger-icon { width: 250px; height: 250px; filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.5)); }
+        .big-gragger-icon.spinning { animation: shake-big-gragger 0.15s infinite alternate ease-in-out; }
+        @keyframes shake-big-gragger { 0% { transform: scale(1) rotate(-35deg); } 100% { transform: scale(1.1) rotate(35deg); } }
+        
+        /* הודעה צפה למשתמש (טוסט) */
+        .toast-notification { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(255, 204, 0, 0.95); color: #000; padding: 10px 25px; border-radius: 30px; font-family: 'Heebo', sans-serif; font-weight: bold; font-size: 1rem; text-align: center; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; opacity: 0; transition: opacity 0.3s; width: 80%; max-width: 400px; }
+        .toast-notification.show { opacity: 1; }
+    </style>
 </head>
 <body>
 
@@ -67,6 +84,20 @@
     </div>
 </div>
 
+<!-- הודעה צפה עבור חיישן הרעשן -->
+<div id="toast" class="toast-notification"></div>
+
+<!-- הרעשן הענק שקופץ באמצע המסך בזמן ניעור -->
+<div id="bigGraggerOverlay" class="big-gragger-overlay">
+    <div class="big-gragger-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+            <rect x="20" y="10" width="24" height="24" fill="#D2691E" stroke="#8B4513" stroke-width="2"/>
+            <rect x="29" y="34" width="6" height="26" fill="#8B4513"/>
+            <circle cx="32" cy="22" r="4" fill="#FFD700"/>
+        </svg>
+    </div>
+</div>
+
 <script src="firebase-setup.js"></script>
 <script src="megillahData.js"></script>
 <script src="megillahDataNoNikkud.js"></script>
@@ -77,6 +108,137 @@
     let currentChapter = 1; let currentPlaybackRate = 1; let currentSpeedIdx = 0;
     const playSpeeds =[1, 1.25, 1.5, 1.75, 2, 2.5, 3];
     const audio = document.getElementById('megillahAudio');
+
+    // === הגדרות מערכת הרעשן הווירטואלי ===
+    const graggerAudio = new Audio('gragger.mp3'); 
+    graggerAudio.preload = 'auto'; 
+    graggerAudio.loop = true; 
+
+    let isGraggerAllowed = false; 
+    let activeGraggersOnScreen = 0;
+    let sensorsInitialized = false;
+    let lastAccX = null, lastAccY = null, lastAccZ = null;
+    let shakeStopTimeout = null; 
+
+    function initSensorsOnFirstTouch() {
+        if (sensorsInitialized) return;
+        
+        graggerAudio.volume = 0;
+        graggerAudio.play().catch(() => {});
+
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            DeviceMotionEvent.requestPermission().then(permissionState => {
+                if (permissionState === 'granted') {
+                    window.addEventListener('devicemotion', handleMotion);
+                }
+            }).catch(console.error);
+        } else {
+            window.addEventListener('devicemotion', handleMotion);
+        }
+
+        sensorsInitialized = true;
+        document.removeEventListener('click', initSensorsOnFirstTouch);
+        document.removeEventListener('touchstart', initSensorsOnFirstTouch);
+    }
+
+    document.addEventListener('click', initSensorsOnFirstTouch);
+    document.addEventListener('touchstart', initSensorsOnFirstTouch);
+
+    const graggerObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                if (!entry.target.classList.contains('active')) {
+                    entry.target.classList.add('active'); 
+                    activeGraggersOnScreen++;
+                    
+                    if (activeGraggersOnScreen === 1) { 
+                        isGraggerAllowed = true;
+                        showToast("המן על המסך! נער את הטלפון כדי להרעיש 🪇", 3500);
+                        if (graggerAudio.paused) {
+                            graggerAudio.volume = 0;
+                            graggerAudio.play().catch(() => {});
+                        }
+                    }
+                }
+            } else {
+                if (entry.target.classList.contains('active')) {
+                    entry.target.classList.remove('active'); 
+                    activeGraggersOnScreen = Math.max(0, activeGraggersOnScreen - 1);
+                    
+                    if (activeGraggersOnScreen === 0) { 
+                        isGraggerAllowed = false;
+                        stopGraggerEffect(); 
+                    }
+                }
+            }
+        });
+    }, { threshold: 0.1 }); 
+
+    function insertGraggers(text) {
+        const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="20" y="10" width="24" height="24" fill="#D2691E" stroke="#8B4513" stroke-width="2"/><rect x="29" y="34" width="6" height="26" fill="#8B4513"/><circle cx="32" cy="22" r="4" fill="#FFD700"/></svg>`;
+        const graggerHtml = `<span class="gragger-icon">${svgIcon}</span>`;
+        return text.replace(/###/g, graggerHtml);
+    }
+
+    function handleMotion(event) {
+        let acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        if (lastAccX !== null) {
+            let deltaX = Math.abs(acc.x - lastAccX);
+            let deltaY = Math.abs(acc.y - lastAccY);
+            let deltaZ = Math.abs(acc.z - lastAccZ);
+
+            if (isGraggerAllowed && (deltaX + deltaY + deltaZ > 12)) {
+                startGraggerEffect();
+            }
+        }
+        lastAccX = acc.x; lastAccY = acc.y; lastAccZ = acc.z;
+    }
+
+    function startGraggerEffect() {
+        graggerAudio.volume = 1;
+        if (graggerAudio.paused) graggerAudio.play().catch(()=>{});
+
+        const bigOverlay = document.getElementById('bigGraggerOverlay');
+        const bigIcon = bigOverlay.querySelector('.big-gragger-icon');
+        
+        if (bigOverlay && bigIcon) {
+            bigOverlay.classList.add('show');
+            if (!bigIcon.classList.contains('spinning')) {
+                bigIcon.classList.add('spinning');
+            }
+        }
+
+        clearTimeout(shakeStopTimeout);
+        shakeStopTimeout = setTimeout(stopGraggerEffect, 250);
+    }
+
+    function stopGraggerEffect() {
+        graggerAudio.volume = 0; 
+        const bigOverlay = document.getElementById('bigGraggerOverlay');
+        const bigIcon = bigOverlay.querySelector('.big-gragger-icon');
+        
+        if (bigOverlay) bigOverlay.classList.remove('show');
+        if (bigIcon) bigIcon.classList.remove('spinning');
+    }
+
+    let toastTimeout;
+    function showToast(msg, duration = 3000) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    function resetGraggerState() {
+        graggerObserver.disconnect();
+        isGraggerAllowed = false;
+        activeGraggersOnScreen = 0;
+        stopGraggerEffect();
+    }
+    // ===========================================
 
     window.onload = () => { setupNav(); loadChapter(1); };
 
@@ -97,6 +259,7 @@
     }
 
     function loadChapter(num) {
+        resetGraggerState();
         currentChapter = num;
         document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
         applyLayout(); updateBottomNav();
@@ -131,22 +294,33 @@
             span.onclick = () => { audio.currentTime = item.time; audio.play(); };
 
             let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
+            textWithNikkud = insertGraggers(textWithNikkud);
+
             let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
             let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
             let clean = verseMatch ? textWithNikkud.replace(verseMatch[1], '') : textWithNikkud;
 
             let withoutContent = '';
             if (dataNoNikkud[idx] && dataNoNikkud[idx].t) {
-                let vMatch2 = dataNoNikkud[idx].t.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
-                withoutContent = vMatch2 ? dataNoNikkud[idx].t.replace(vMatch2[1], '') : dataNoNikkud[idx].t;
+                let noNikkudText = insertGraggers(dataNoNikkud[idx].t);
+                let vMatch2 = noNikkudText.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+                withoutContent = vMatch2 ? noNikkudText.replace(vMatch2[1], '') : noNikkudText;
             }
 
             span.innerHTML = `<span class="text-with">${verseHtml}${clean}</span><span class="text-without">${withoutContent}</span>`;
             area.appendChild(span);
         });
+
+        // חיבור הצופה (Observer) לכל הרעשנים שנוצרו (כדי שיפעל גם בתצוגת שתי עמודות)
+        setTimeout(() => {
+            document.querySelectorAll('.gragger-icon').forEach(el => {
+                graggerObserver.observe(el);
+            });
+        }, 100);
     }
 
     function cycleDisplayMode() {
+        resetGraggerState();
         displayMode = (displayMode + 1) % 3;
         const labels =["לתצוגה ללא ניקוד וטעמים", "לתצוגת שתי עמודות", "לתצוגה עם ניקוד וטעמים"];
         document.getElementById('mainCycleBtn').innerText = labels[displayMode];
