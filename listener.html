@@ -18,8 +18,7 @@
             margin: 0 0.3em;
             vertical-align: middle;
             cursor: pointer;
-            opacity: 0.5;
-            filter: grayscale(80%);
+            opacity: 1; /* נראות מלאה */
             transition: all 0.3s ease;
         }
         
@@ -31,11 +30,10 @@
         
         /* מצב פעיל (לאחר לחיצה) */
         .gragger-icon.active {
-            opacity: 1;
-            filter: grayscale(0%);
             transform: scale(1.3);
             background-color: rgba(255, 204, 0, 0.2);
             border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
         }
 
         /* אנימציית סיבוב ורעש בזמן הניעור */
@@ -120,9 +118,10 @@
 <!-- הודעה צפה עבור חיישן הרעשן -->
 <div id="toast" class="toast-notification"></div>
 
-<script src="firebase-setup.js"></script>
-<script src="megillahData.js"></script>
-<script src="megillahDataNoNikkud.js"></script>
+<!-- קבצים עם גרסה 3 כדי להתגבר על שמירת מטמון בטלפון -->
+<script src="firebase-setup.js?v=3"></script>
+<script src="megillahData.js?v=3"></script>
+<script src="megillahDataNoNikkud.js?v=3"></script>
 
 <script>
     let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
@@ -132,6 +131,8 @@
 
     // === הגדרות מערכת השמע של הרעשן ===
     const graggerAudio = new Audio('gragger.mp3'); 
+    graggerAudio.preload = 'auto'; // טעינה מוקדמת של השמע
+
     let isGraggerModeActive = false;
     let currentActiveGraggerEl = null;
     let lastAccX = null, lastAccY = null, lastAccZ = null;
@@ -158,8 +159,6 @@
     function insertGraggers(text) {
         const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="20" y="10" width="24" height="24" fill="#D2691E" stroke="#8B4513" stroke-width="2"/><rect x="29" y="34" width="6" height="26" fill="#8B4513"/><circle cx="32" cy="22" r="4" fill="#FFD700"/></svg>`;
         const graggerHtml = `<span class="gragger-icon" onclick="activateGragger(this)" title="לחץ עלי ונער את הטלפון!">${svgIcon}</span>`;
-        
-        // מחליף את כל המופעים של ### בקוד ה-HTML של הרעשן
         return text.replace(/###/g, graggerHtml);
     }
 
@@ -185,17 +184,21 @@
 
     // === לוגיקת הרעשן ושקשוק המכשיר ===
     function activateGragger(element) {
-        // שחרור נעילת שמע של הדפדפן בלחיצה ראשונה
-        if (graggerAudio.paused && graggerAudio.currentTime === 0) {
-            graggerAudio.play().then(() => {
-                graggerAudio.pause();
-                graggerAudio.currentTime = 0;
-            }).catch(e => console.log("Audio unlock failed", e));
+        // התיקון הקריטי: שחרור חסימת שמע של הדפדפן (חובה ללחוץ פיזית פעם אחת)
+        graggerAudio.currentTime = 0;
+        let playPromise = graggerAudio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("הדפדפן עדיין חוסם שמע:", error);
+            });
         }
 
-        // אם כבר הופעל, לחיצה נוספת תעשה רעש ידני
+        // הפעלת אנימציה קצרה כחיווי ללחיצה
+        element.classList.add('spinning');
+        setTimeout(() => element.classList.remove('spinning'), 300);
+
+        // אם כבר הופעל בעבר, אל תבקש שוב הרשאה, מספיק שהשמענו קול הרגע
         if (element.classList.contains('active')) {
-            triggerGraggerEffect();
             return;
         }
 
@@ -262,10 +265,13 @@
 
     let effectTimeout;
     function triggerGraggerEffect() {
-        // הפעלת שמע
-        if (graggerAudio.paused || graggerAudio.currentTime > 0.2) {
+        // הפעלת שמע בזמן הניעור
+        if (graggerAudio.paused || graggerAudio.currentTime > 0.1) {
             graggerAudio.currentTime = 0;
-            graggerAudio.play().catch(e => console.log("הדפדפן חסם שמע", e));
+            let playPromise = graggerAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log("הדפדפן חסם שמע בזמן ניעור", e));
+            }
         }
 
         // הפעלת אנימציה
