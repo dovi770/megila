@@ -1,124 +1,732 @@
 <!DOCTYPE html>
+
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>קול קורא המגילה</title>
-    
-    <!-- פונטים חיצוניים -->
-    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- קישור לקובץ העיצוב -->
-    <link rel="stylesheet" href="style.css">
 
-    <!-- ספריות Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- טעינת הספריות של Firebase (גרסה 8 - קלה ונוחה לשימוש) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<style>
+    :root {
+        --bg-color: #fdfbf7;
+        --primary-color: #0b1c2c;
+        --accent-color: #d4af37;
+        --text-color: #1a1a1a;
+        --playing-bg: rgba(11, 28, 44, 0.08);
+        --bottom-bar-height: 110px;
+    }
+
+    @font-face {
+        font-family: 'Guttman Stam';
+        src: url('./fonts/guttman-stam.ttf') format('truetype');
+        font-weight: normal; font-style: normal;
+    }
+
+    @font-face {
+        font-family: 'SBL Hebrew';
+        src: url('./fonts/SBL-Hebrew.ttf') format('truetype');
+        font-weight: normal; font-style: normal;
+    }
+
+    body {
+        margin: 0; padding: 0;
+        font-family: 'Heebo', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        padding-bottom: var(--bottom-bar-height);
+        overflow-x: hidden;
+    }
+
+    /* מסך פתיחה */
+    #welcomeOverlay {
+        position: fixed; top:0; left:0; width:100%; height:100%;
+        background: var(--primary-color); z-index: 9999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: white; text-align: center; transition: opacity 0.5s;
+    }
+    #welcomeOverlay h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 3.5rem; margin-bottom: 10px; }
+    #welcomeOverlay p { font-size: 1.2rem; color: var(--accent-color); margin-bottom: 30px; }
+    .welcome-btns { display: flex; gap: 20px; }
+    .welcome-btn {
+        background: var(--accent-color); color: var(--primary-color); border: none;
+        padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem;
+    }
+    .welcome-btn.secondary { background: transparent; border: 2px solid var(--accent-color); color: var(--accent-color); }
+
+    header {
+        background-color: var(--primary-color);
+        color: white; padding: 20px 40px;
+        border-bottom: 4px solid var(--accent-color);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .header-text { display: flex; flex-direction: column; flex: 1; }
+    header h1 { margin: 0; font-family: 'Frank Ruhl Libre', serif; font-size: 2.5rem; text-align: right; cursor: pointer; }
+    header h2 { margin: 0; color: var(--accent-color); font-size: 1rem; text-align: right; font-weight: 400; line-height: 1.4; }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    
+    .top-nav-bar {
+        background-color: #fff; position: sticky; top: 0; z-index: 100;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto;
+        display: flex; justify-content: flex-start; padding: 10px;
+    }
+
+    .chapter-nav { display: flex; gap: 8px; padding: 0 10px; }
+
+    .chapter-btn {
+        background-color: #f8f8f8; color: var(--primary-color);
+        border: 1px solid #ddd; padding: 8px 15px;
+        border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap;
+    }
+
+    .chapter-btn.active { background-color: var(--accent-color); border-color: var(--accent-color); }
+
+    .instructions-hint { text-align: center; font-size: 1rem; color: #444; margin: 15px 0; font-weight: bold; }
+    .instructions-hint.hidden { display: none; }
+
+    .tikkun-wrapper { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+
+    .dual-view-container { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr;
+        gap: 15px; 
+        width: 100%; 
+    }
+
+    .column { 
+        background: white; padding: 30px; border-radius: 12px; 
+        border-bottom: 5px solid var(--accent-color); box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+    }
+
+    .text-content { 
+        line-height: 2.2; 
+        text-align: justify; 
+        word-wrap: break-word; 
+    }
+    
+    .mode-chumash .text-content { font-family: 'SBL Hebrew', serif; }
+    .mode-megillah .text-content { font-family: 'Guttman Stam', serif; }
+    
+    .k-katan { color: var(--accent-color); font-weight: normal; } 
+    .verse-num { color: #999; font-size: 0.55em; margin-left: 8px; font-family: 'Heebo', sans-serif; }
+    .pasuk { border-radius: 6px; padding: 0 4px; cursor: pointer; transition: 0.2s; display: inline; }
+    .pasuk.playing-now { background-color: var(--playing-bg); border-bottom: 3px solid var(--accent-color); }
+
+    .mode-chumash .text-without { display: none; }
+    .mode-megillah .text-with, .mode-megillah .verse-num { display: none; }
+    
+    .floating-controls {
+        position: fixed; bottom: calc(var(--bottom-bar-height) + 20px);
+        left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1001;
+    }
+    .floating-controls.hidden { display: none; }
+
+    .f-btn {
+        background: var(--accent-color); color: var(--primary-color);
+        border: none; padding: 12px 22px; border-radius: 50px;
+        font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;
+        font-family: 'Heebo', sans-serif; font-size: 0.95rem;
+    }
+
+    .bottom-nav-btns { display: flex; justify-content: center; gap: 20px; margin-top: 30px; padding: 20px 0; }
+    .nav-btn {
+        background: var(--primary-color); color: white; border: none;
+        padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold;
+    }
+
+    .bottom-player-bar {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background-color: var(--primary-color); height: var(--bottom-bar-height);
+        z-index: 1000; display: flex; justify-content: center; align-items: center;
+    }
+    .bottom-player-bar.hidden { display: none; }
+
+    .player-content { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 800px; padding: 0 20px; }
+    
+    .main-play-btn {
+        background: var(--accent-color); border: none; width: 62px; height: 62px;
+        border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .main-play-btn svg { width: 30px; height: 30px; fill: var(--primary-color); }
+
+    .mini-btn {
+        background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+        padding: 6px 10px; border-radius: 10px; cursor: pointer; font-size: 0.75rem; min-width: 50px; font-family: 'Heebo', sans-serif;
+    }
+
+    /* עיצוב חלונות קופצים (מודלים - צור קשר וניהול) */
+    .modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 10005; align-items: center; justify-content: center;
+    }
+    .modal-box {
+        background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px;
+        color: var(--text-color); box-shadow: 0 5px 20px rgba(0,0,0,0.3); max-height: 85vh; overflow-y: auto;
+    }
+    .modal-box h3 { margin-top: 0; color: var(--primary-color); font-family: 'Frank Ruhl Libre', serif; font-size: 1.8rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+    .close-modal { float: left; cursor: pointer; font-size: 1.5rem; color: #888; border: none; background: none; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Heebo', sans-serif; box-sizing: border-box; }
+    .submit-btn { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; }
+    
+    .admin-stats { margin-bottom: 20px; background: #f8f8f8; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+    .admin-stats p { margin: 5px 0; font-weight: bold; }
+    .data-list { list-style: none; padding: 0; margin: 0; font-size: 0.9rem; }
+    .data-list li { background: #fff; margin-bottom: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+
+    @media (max-width: 768px) {
+        header { flex-direction: column; padding: 15px; text-align: center; gap: 15px; }
+        .header-text { align-items: center; }
+        header h1, header h2 { text-align: center; }
+        .welcome-btns { flex-direction: column; gap: 15px; width: 80%; }
+        .welcome-btn { width: 100%; box-sizing: border-box; }
+        .mini-btn { font-size: 0.7rem; padding: 5px 8px; }
+        #welcomeOverlay h1 { font-size: 2.2rem; }
+    }
+</style>
 </head>
 <body>
 
-    <div id="welcomeOverlay">
-        <h1>קול קורא המגילה</h1>
-        <p>הכנה למבצעים • מנהגי חב"ד • הברה ספרדית מדויקת</p>
-        <div class="welcome-btns">
-            <button class="welcome-btn" onclick="startApp('reader')">הכנת המגילה לבעלי קריאה</button>
-            <button class="welcome-btn secondary" onclick="startApp('listener')">מגילת אסתר למעקב בקריאה בציבור</button>
+<div id="welcomeOverlay">
+    <h1>קול קורא המגילה</h1>
+    <p>הכנה למבצעים • מנהגי חב"ד • הברה ספרדית מדויקת</p>
+    <div class="welcome-btns">
+        <button class="welcome-btn" onclick="startApp('reader')">הכנת המגילה לבעלי קריאה</button>
+        <button class="welcome-btn secondary" onclick="startApp('listener')">מגילת אסתר למעקב בקריאה בציבור</button>
+    </div>
+</div>
+
+<header>
+    <div class="header-text">
+        <h1 onclick="showWelcomeScreen()">קול קורא המגילה</h1>
+        <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
+    </div>
+    <div class="header-actions">
+        <button class="mini-btn" onclick="openContactModal()">✉️ צור קשר</button>
+        <button class="mini-btn" onclick="openAdminLogin()" title="ניהול">⚙️</button>
+    </div>
+</header>
+
+<nav class="top-nav-bar">
+    <div class="chapter-nav" id="chapterNav"></div>
+</nav>
+
+<div class="instructions-hint" id="instructionsHint">לשמיעה – לחצו על הפסוק הרצוי</div>
+
+<div class="tikkun-wrapper">
+    <main id="mainWrapper">
+        <div id="dualContainer" class="column mode-chumash">
+            <div class="text-content" id="textContentArea"></div>
+        </div>
+    </main>
+    <div class="bottom-nav-btns" id="bottomNav"></div>
+</div>
+
+<div class="floating-controls" id="floatingControls">
+    <button class="f-btn" id="mainCycleBtn" onclick="cycleDisplayMode()">לתצוגה ללא ניקוד וטעמים</button>
+</div>
+
+<audio id="megillahAudio" ontimeupdate="syncText()"></audio>
+
+<!-- סרגל תחתון עבור בעלי קריאה -->
+<div class="bottom-player-bar" id="playerBar">
+    <div class="player-content">
+        <div style="display:flex; gap:8px; flex:1;">
+            <button class="mini-btn" id="speedBtn" onclick="toggleSpeed()">⏱ 1x</button>
+            <button class="mini-btn" id="scrollCycleBtn" onclick="cycleScrollMode()">לגלילה אוטומטית</button>
+        </div>
+        <button class="main-play-btn" onclick="togglePlayPause()">
+            <div id="playBtnIcon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></div>
+        </button>
+        <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
+            <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
+            <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
         </div>
     </div>
+</div>
 
-    <header>
-        <div class="header-text">
-            <h1 onclick="showWelcomeScreen()">קול קורא המגילה</h1>
-            <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
+<!-- סרגל תחתון חדש עבור מעקב בציבור (מצב שומע) -->
+<div class="bottom-player-bar hidden" id="listenerBar">
+    <div class="player-content">
+        <div style="display:flex; gap:8px; flex:1;">
+            <button class="mini-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()">▶ גלילה אוטומטית</button>
+            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">💨 מהירות: 1</button>
         </div>
-        <div class="header-actions">
-            <button class="mini-btn" onclick="openContactModal()">✉️ צור קשר</button>
-            <button class="mini-btn" onclick="openAdminLogin()" title="ניהול">⚙️</button>
-        </div>
-    </header>
-
-    <nav class="top-nav-bar">
-        <div class="chapter-nav" id="chapterNav"></div>
-    </nav>
-
-    <div class="instructions-hint" id="instructionsHint">לשמיעה – לחצו על הפסוק הרצוי</div>
-
-    <div class="tikkun-wrapper">
-        <main id="mainWrapper">
-            <div id="dualContainer" class="column mode-chumash">
-                <div class="text-content" id="textContentArea"></div>
-            </div>
-        </main>
-        <div class="bottom-nav-btns" id="bottomNav"></div>
-    </div>
-
-    <div class="floating-controls" id="floatingControls">
-        <button class="f-btn" id="mainCycleBtn" onclick="cycleDisplayMode()">לתצוגה ללא ניקוד וטעמים</button>
-    </div>
-
-    <audio id="megillahAudio" ontimeupdate="syncText()"></audio>
-
-    <!-- סרגלי כלים תחתונים -->
-    <div class="bottom-player-bar" id="playerBar">
-        <div class="player-content">
-            <div style="display:flex; gap:8px; flex:1;">
-                <button class="mini-btn" id="speedBtn" onclick="toggleSpeed()">⏱ 1x</button>
-                <button class="mini-btn" id="scrollCycleBtn" onclick="cycleScrollMode()">לגלילה אוטומטית</button>
-            </div>
-            <button class="main-play-btn" onclick="togglePlayPause()">
-                <div id="playBtnIcon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></div>
-            </button>
-            <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
-                <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
-                <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
-            </div>
+        <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
+            <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
+            <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
         </div>
     </div>
+</div>
 
-    <div class="bottom-player-bar hidden" id="listenerBar">
-        <div class="player-content">
-            <div style="display:flex; gap:8px; flex:1;">
-                <button class="mini-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()">▶ גלילה אוטומטית</button>
-                <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">💨 מהירות: 1</button>
-            </div>
-            <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
-                <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
-                <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
-            </div>
+<!-- מודל צור קשר -->
+<div id="contactModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-modal" onclick="closeModals()">✖</button>
+        <h3>צור קשר עם ההנהלה</h3>
+        <div class="form-group">
+            <label>שם:</label>
+            <input type="text" id="contactName" placeholder="הכנס את שמך...">
         </div>
-    </div>
-
-    <!-- מודלים (צור קשר וניהול) -->
-    <div id="contactModal" class="modal-overlay">
-        <div class="modal-box">
-            <button class="close-modal" onclick="closeModals()">✖</button>
-            <h3>צור קשר עם ההנהלה</h3>
-            <div class="form-group"><label>שם:</label><input type="text" id="contactName"></div>
-            <div class="form-group"><label>הודעה:</label><textarea id="contactMessage" rows="4"></textarea></div>
-            <button class="submit-btn" onclick="sendMessage()">שלח הודעה</button>
+        <div class="form-group">
+            <label>הודעה:</label>
+            <textarea id="contactMessage" rows="4" placeholder="כתוב את הודעתך כאן..."></textarea>
         </div>
+        <button class="submit-btn" onclick="sendMessage()">שלח הודעה</button>
     </div>
+</div>
 
-    <div id="adminModal" class="modal-overlay">
-        <div class="modal-box">
-            <button class="close-modal" onclick="closeModals()">✖</button>
-            <h3>פאנל ניהול</h3>
-            <div class="admin-stats">
-                <p>👁️ כניסות: <span id="adminVisits">...</span></p>
-                <p>🎧 השמעות: <span id="adminPlays">...</span></p>
-                <button class="mini-btn" onclick="clearAdminData()" style="background: darkred;">מחק נתונים</button>
-            </div>
-            <h4>הודעות:</h4>
-            <ul class="data-list" id="adminMessagesList"></ul>
-            <h4>היסטוריה:</h4>
-            <ul class="data-list" id="adminPlaysList"></ul>
+<!-- מודל ניהול מוסתר -->
+<div id="adminModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-modal" onclick="closeModals()">✖</button>
+        <h3>פאנל ניהול (מחובר לענן)</h3>
+        <div class="admin-stats">
+            <p>👁️ סך כל הכניסות לאתר: <span id="adminVisits">טוען...</span></p>
+            <p>🎧 סך כל ההשמעות (Play): <span id="adminPlays">טוען...</span></p>
+            <button class="mini-btn" onclick="clearAdminData()" style="background: darkred; margin-top: 10px;">מחק את כל הנתונים</button>
         </div>
-    </div>
+        
+        <h4>הודעות ממשתמשים:</h4>
+        <ul class="data-list" id="adminMessagesList" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px;">
+            <li>טוען הודעות...</li>
+        </ul>
 
-    <!-- טעינת הנתונים והסקריפטים -->
-    <script src="megillahData.js"></script>
-    <script src="megillahDataNoNikkud.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
+        <h4>היסטוריית השמעות אחרונות (50 אחרונים):</h4>
+        <ul class="data-list" id="adminPlaysList" style="max-height: 150px; overflow-y: auto;">
+            <li>טוען היסטוריה...</li>
+        </ul>
+    </div>
+</div>
+
+<script src="megillahData.js"></script>
+<script src="megillahDataNoNikkud.js"></script>
+
+<script>
+    // ==========================================
+    // ==========================================
+    const ADMIN_PASS_HASH = "f33ef584161d349d906df37718453917299dd56fd43111e1fb1c4ef1f5afb019";
+
+    // פונקציית עזר להצפנת הסיסמה שמוקלדת לבדיקה מול הצופן השמור
+    async function hashString(str) {
+        const msgBuffer = new TextEncoder().encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // ==========================================
+    // 🔴🔴🔴 הדבק את נתוני ה-Firebase שלך כאן 🔴🔴🔴
+    // ==========================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBTAjmwijuxSoo1W8SBh0MWu-ZFDlFZZ8U",
+        authDomain: "megilat-ester.firebaseapp.com",
+        databaseURL: "https://megilat-ester-default-rtdb.firebaseio.com/",
+        projectId: "megilat-ester",
+        storageBucket: "megilat-ester.firebasestorage.app",
+        messagingSenderId: "933099508099",
+        appId: "1:933099508099:web:7276a005e72a75c16326b6"
+    };
+    
+    // אתחול מערכת Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // תיעוד כניסה לאתר מכל העולם
+    window.onload = () => {
+        db.ref('stats/visits').set(firebase.database.ServerValue.increment(1));
+    };
+
+    // תיעוד שליחת הודעה
+    function sendMessage() {
+        const name = document.getElementById('contactName').value;
+        const text = document.getElementById('contactMessage').value;
+        if(name.trim() === '' || text.trim() === '') {
+            alert("אנא מלא את כל השדות.");
+            return;
+        }
+        
+        db.ref('messages').push({
+            name: name,
+            text: text,
+            date: new Date().toLocaleString('he-IL')
+        }).then(() => {
+            alert("הודעתך נשלחה בהצלחה להנהלת האתר!");
+            document.getElementById('contactName').value = '';
+            document.getElementById('contactMessage').value = '';
+            closeModals();
+        }).catch((error) => {
+            console.error("שגיאה בשליחת הודעה: ", error);
+            alert("אירעה שגיאה. בדוק את החיבור שלך.");
+        });
+    }
+
+    function openContactModal() {
+        document.getElementById('contactModal').style.display = 'flex';
+    }
+
+    // פתיחת פאנל הניהול עם בדיקת סיסמה מוצפנת
+    async function openAdminLogin() {
+        const pass = prompt("נא להזין סיסמת מנהל:");
+        if (pass !== null) {
+            const hashed = await hashString(pass);
+            if (hashed === ADMIN_PASS_HASH) {
+                updateAdminDashboard(); 
+                document.getElementById('adminModal').style.display = 'flex';
+            } else {
+                alert("סיסמה שגויה.");
+            }
+        }
+    }
+
+    function updateAdminDashboard() {
+        db.ref('stats/visits').once('value').then(snap => {
+            document.getElementById('adminVisits').innerText = snap.val() || 0;
+        });
+
+        db.ref('messages').once('value').then(snap => {
+            const msgList = document.getElementById('adminMessagesList');
+            msgList.innerHTML = '';
+            const messages =[];
+            snap.forEach(childSnap => { messages.push(childSnap.val()); });
+            
+            if(messages.length === 0) {
+                msgList.innerHTML = '<li>אין הודעות חדשות.</li>';
+            } else {
+                messages.reverse().forEach(m => {
+                    msgList.innerHTML += `<li><strong>${m.name} (${m.date}):</strong><br>${m.text}</li>`;
+                });
+            }
+        });
+
+        db.ref('plays').limitToLast(50).once('value').then(snap => {
+            const playsList = document.getElementById('adminPlaysList');
+            playsList.innerHTML = '';
+            
+            const plays =[];
+            snap.forEach(childSnap => { plays.push(childSnap.val()); });
+            
+            document.getElementById('adminPlays').innerText = plays.length >= 50 ? "50+" : plays.length;
+
+            if(plays.length === 0) {
+                playsList.innerHTML = '<li>אין נתוני השמעות כרגע.</li>';
+            } else {
+                plays.reverse().forEach(p => {
+                    playsList.innerHTML += `<li>תאריך: ${p.date} | פרק ${p.chapter} | שניה: ${p.time}</li>`;
+                });
+            }
+        });
+    }
+
+    function clearAdminData() {
+        if(confirm("האם אתה בטוח שברצונך למחוק את כל הנתונים במסד הנתונים בענן? לא ניתן לשחזר פעולה זו!")) {
+            db.ref('stats').remove();
+            db.ref('messages').remove();
+            db.ref('plays').remove();
+            alert("הנתונים נמחקו מהענן בהצלחה.");
+            updateAdminDashboard();
+        }
+    }
+
+    function closeModals() {
+        document.getElementById('contactModal').style.display = 'none';
+        document.getElementById('adminModal').style.display = 'none';
+    }
+
+    // ==========================================
+    // קוד האתר הרגיל (השמעות, טקסט וכו')
+    // ==========================================
+    let displayMode = 0; 
+    let scrollMode = 0; 
+    let isSilentMode = false;
+    let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
+    let currentChapter = 1;
+    let currentPlaybackRate = 1;
+    let currentSpeedIdx = 0;
+    const playSpeeds =[1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+    const audio = document.getElementById('megillahAudio');
+
+    // פונקציות גלילה אוטומטית לקריאה בציבור
+    let listenerAutoScrollInterval = null;
+    let isListenerScrolling = false;
+    let listenerScrollSpeedIdx = 0;
+    const listenerScrollSpeeds =[1, 1.5, 2.5, 4]; // מהירויות גלילה בפיקסלים
+
+    function toggleListenerScroll() {
+        isListenerScrolling = !isListenerScrolling;
+        const btn = document.getElementById('listenerScrollToggleBtn');
+        if (isListenerScrolling) {
+            btn.style.background = "var(--accent-color)";
+            btn.style.color = "var(--primary-color)";
+            btn.innerHTML = "⏸ עצור גלילה";
+            listenerAutoScrollInterval = setInterval(() => {
+                window.scrollBy(0, listenerScrollSpeeds[listenerScrollSpeedIdx]);
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+                    toggleListenerScroll(); // עצירה בסוף העמוד
+                }
+            }, 30);
+        } else {
+            btn.style.background = "rgba(255,255,255,0.1)";
+            btn.style.color = "white";
+            btn.innerHTML = "▶ גלילה אוטומטית";
+            clearInterval(listenerAutoScrollInterval);
+        }
+    }
+
+    function changeListenerScrollSpeed() {
+        listenerScrollSpeedIdx = (listenerScrollSpeedIdx + 1) % listenerScrollSpeeds.length;
+        document.getElementById('listenerSpeedBtn').innerText = '💨 מהירות: ' + (listenerScrollSpeedIdx + 1);
+    }
+
+    function showWelcomeScreen() {
+        document.getElementById('welcomeOverlay').style.display = 'flex';
+        document.getElementById('welcomeOverlay').style.opacity = '1';
+        audio.pause();
+        audio.currentTime = 0;
+        if (isListenerScrolling) toggleListenerScroll();
+    }
+
+    function startApp(mode) {
+        isSilentMode = (mode === 'listener');
+        
+        if (isSilentMode) {
+            displayMode = 0; // פתרון הבאג: כפיית תצוגה עם ניקוד תמיד במצב קריאה בציבור
+        }
+
+        document.getElementById('playerBar').classList.toggle('hidden', isSilentMode);
+        document.getElementById('listenerBar').classList.toggle('hidden', !isSilentMode);
+        document.getElementById('instructionsHint').classList.toggle('hidden', isSilentMode);
+        document.getElementById('floatingControls').classList.toggle('hidden', isSilentMode);
+
+        document.getElementById('welcomeOverlay').style.opacity = '0';
+        setTimeout(() => { document.getElementById('welcomeOverlay').style.display = 'none'; }, 500);
+        setupNav();
+        loadChapter(1);
+    }
+
+    function highlightKamatzKatan(text, chap, vIdx) {
+        let formatted = text;
+        const targets =[
+            {c:1, v:2, from:"מָ", to:"<span class='k-katan'>מָ</span>", originalTextPart: "מַלְכוֹ"}, 
+            {c:1, v:10, from:"יָפְיָ", to:"<span class='k-katan'>יָ</span>פְיָ", originalTextPart: "יָפְיָהּ"}, 
+            {c:1, v:16, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, 
+            {c:2, v:11, from:"חֳ", to:"<span class='k-katan'>חֳ</span>", originalTextPart: "חֳדָשִׁים"}, 
+            {c:2, v:19, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאֱמֻנָה"}, 
+            {c:3, v:3, from:"בְּאָ", to:"בְּ<span class='k-katan'>אָ</span>", originalTextPart: "בְּאָמְרָם"}, 
+            {c:5, v:10, from:"עָ", to:"<span class='k-katan'>עָ</span>", originalTextPart: "עָשְׁרוֹ"}, 
+            {c:6, v:11, from:"שָׁ", to:"<span class='k-katan'>שָׁ</span>", originalTextPart: "וַיָּשָׁב"}, 
+            {c:8, v:3, from:"קָ", to:"<span class='k-katan'>קָ</span>", originalTextPart: "וַתָּקָם"}, 
+            {c:9, v:3, from:"שָׂ", to:"<span class='k-katan'>שָׂ</span>", originalTextPart: "שָׂרֵי"}, 
+            {c:10, v:1, from:"תָּ", to:"<span class='k-katan'>תָּ</span>", originalTextPart: "תָּקְפּוֹ"} 
+        ];
+
+        targets.forEach(t => {
+            if(chap === t.c && vIdx === t.v) {
+                if (t.originalTextPart) {
+                    const wordRegex = new RegExp(`\\b${t.originalTextPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'g');
+                    formatted = formatted.replace(wordRegex, (match) => {
+                        return match.replace(new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), t.to);
+                    });
+                } else {
+                    const simpleRegex = new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+                    formatted = formatted.replace(simpleRegex, t.to);
+                }
+            }
+        });
+        return formatted;
+    }
+
+    function loadChapter(num) {
+        if (isSilentMode && isListenerScrolling) {
+            toggleListenerScroll(); // עוצר את הגלילה במעבר פרק
+        }
+
+        currentChapter = num;
+        document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
+        applyLayout();
+        updateBottomNav();
+        
+        if(!isSilentMode) {
+            audio.src = `./audio/chap${num}.mp3`;
+            audio.oncanplaythrough = () => audio.playbackRate = currentPlaybackRate;
+        }
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    function syncText() {
+        if (isSilentMode) return;
+        const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] :[];
+        let activeIdx = -1;
+        for (let i = 0; i < data.length; i++) { if (audio.currentTime >= data[i].time) activeIdx = i; }
+        
+        document.querySelectorAll('.pasuk').forEach(p => p.classList.remove('playing-now'));
+        const activeSpans = document.querySelectorAll(`.pasuk[data-index="${activeIdx}"]`);
+        
+        if(activeSpans.length > 0) {
+            activeSpans.forEach(s => s.classList.add('playing-now'));
+            if(scrollMode === 1) {
+                const offset = activeSpans[0].getBoundingClientRect().top + window.scrollY - 150;
+                window.scrollTo({ top: offset, behavior: 'smooth' });
+            }
+        }
+    }
+
+    function renderTextToElement(area, isDual, isChumashMode = false) {
+        area.innerHTML = '';
+        const dataWithNikkud = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] :[];
+        const dataNoNikkud = (typeof megillahDataNoNikkud !== 'undefined') ? megillahDataNoNikkud[currentChapter] :[];
+        
+        let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
+        if (isChumashMode) size += 0.15; 
+        area.style.fontSize = size + 'rem';
+
+        if (!dataWithNikkud || !dataNoNikkud || dataWithNikkud.length !== dataNoNikkud.length) return;
+
+        dataWithNikkud.forEach((item, idx) => {
+            const span = document.createElement('span');
+            span.className = 'pasuk';
+            span.dataset.index = idx;
+            span.onclick = () => { 
+                if(!isSilentMode) { 
+                    audio.currentTime = item.time; 
+                    audio.play(); 
+                }
+            };
+
+            let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
+            let verseMatchWithNikkud = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+            let verseHtml = verseMatchWithNikkud ? `<span class="verse-num">${verseMatchWithNikkud[1]}</span>` : '';
+            let cleanWithNikkud = verseMatchWithNikkud ? textWithNikkud.replace(verseMatchWithNikkud[1], '') : textWithNikkud;
+
+            let textWithoutNikkudContent = '';
+            const itemNoNikkud = dataNoNikkud[idx]; 
+            if (itemNoNikkud && itemNoNikkud.t) {
+                let verseMatchNoNikkud = itemNoNikkud.t.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+                textWithoutNikkudContent = verseMatchNoNikkud ? itemNoNikkud.t.replace(verseMatchNoNikkud[1], '') : itemNoNikkud.t;
+            }
+
+            span.innerHTML = `
+                <span class="text-with">${verseHtml}${cleanWithNikkud}</span>
+                <span class="text-without">${textWithoutNikkudContent}</span>
+            `;
+            area.appendChild(span);
+        });
+    }
+
+    function cycleDisplayMode() {
+        displayMode = (displayMode + 1) % 3;
+        const btn = document.getElementById('mainCycleBtn');
+        const labels =["לתצוגה ללא ניקוד וטעמים", "לתצוגת שתי עמודות", "לתצוגה עם ניקוד וטעמים"];
+        btn.innerText = labels[displayMode];
+        applyLayout();
+    }
+
+    function cycleScrollMode() {
+        scrollMode = (scrollMode + 1) % 2;
+        const btn = document.getElementById('scrollCycleBtn');
+        btn.innerText = scrollMode === 0 ? "לגלילה אוטומטית" : "לגלילה ידנית";
+        btn.style.background = scrollMode === 1 ? "var(--accent-color)" : "rgba(255,255,255,0.1)";
+        btn.style.color = scrollMode === 1 ? "var(--primary-color)" : "white";
+    }
+
+    function toggleSpeed() {
+        currentSpeedIdx = (currentSpeedIdx + 1) % playSpeeds.length;
+        currentPlaybackRate = playSpeeds[currentSpeedIdx];
+        audio.playbackRate = currentPlaybackRate;
+        document.getElementById('speedBtn').innerText = '⏱ ' + currentPlaybackRate + 'x';
+    }
+
+    function applyLayout() {
+        const wrapper = document.getElementById('mainWrapper');
+        wrapper.innerHTML = ''; 
+        if (displayMode === 2) { 
+            const grid = document.createElement('div');
+            grid.className = 'dual-view-container';
+            const col1 = document.createElement('div');
+            col1.className = `column mode-chumash`; 
+            const inner1 = document.createElement('div');
+            inner1.className = 'text-content';
+            renderTextToElement(inner1, true, true); 
+            col1.appendChild(inner1);
+            grid.appendChild(col1);
+
+            const col2 = document.createElement('div');
+            col2.className = `column mode-megillah`; 
+            const inner2 = document.createElement('div');
+            inner2.className = 'text-content';
+            renderTextToElement(inner2, true, false);
+            col2.appendChild(inner2);
+            grid.appendChild(col2);
+            wrapper.appendChild(grid);
+        } else { 
+            const col = document.createElement('div');
+            const isChumashMode = displayMode === 0;
+            col.className = `column ${isChumashMode ? 'mode-chumash' : 'mode-megillah'}`;
+            const inner = document.createElement('div');
+            inner.className = 'text-content';
+            inner.id = 'textContentArea';
+            renderTextToElement(inner, false, isChumashMode); 
+            col.appendChild(inner);
+            wrapper.appendChild(col);
+        }
+    }
+
+    function setupNav() {
+        const nav = document.getElementById('chapterNav');
+        const letters =["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
+        nav.innerHTML = '';
+        for(let i=1; i<=10; i++) {
+            const btn = document.createElement('button');
+            btn.className = `chapter-btn ${i===1?'active':''}`;
+            btn.innerHTML = `פרק ${letters[i]}`;
+            btn.onclick = () => loadChapter(i);
+            nav.appendChild(btn);
+        }
+    }
+
+    function updateBottomNav() {
+        const nav = document.getElementById('bottomNav');
+        nav.innerHTML = `
+            <button class="nav-btn" ${currentChapter===1?'disabled':''} onclick="loadChapter(${currentChapter-1})">פרק הקודם</button>
+            <button class="nav-btn" ${currentChapter===10?'disabled':''} onclick="loadChapter(${currentChapter+1})">פרק הבא</button>
+        `;
+    }
+
+    function changeFontSize(d) {
+        currentFontSize += d * 0.15;
+        if(currentFontSize < 1.2) currentFontSize = 1.2;
+        document.querySelectorAll('.text-content').forEach(el => {
+            const isDual = el.closest('.dual-view-container') !== null;
+            const isChumashMode = el.closest('.mode-chumash') !== null;
+            let size = isDual ? (currentFontSize * 0.75) : currentFontSize;
+            if (isChumashMode) size += 0.15;
+            el.style.fontSize = size + 'rem';
+        });
+    }
+
+    function togglePlayPause() { audio.paused ? audio.play() : audio.pause(); }
+    
+    audio.onplay = () => {
+        document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>';
+        
+        db.ref('plays').push({
+            chapter: currentChapter,
+            time: Math.floor(audio.currentTime) + "s",
+            date: new Date().toLocaleString('he-IL')
+        });
+    };
+    
+    audio.onpause = () => {
+        document.getElementById('playBtnIcon').innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>';
+    };
+</script>
 </body>
 </html>
