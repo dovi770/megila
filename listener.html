@@ -18,7 +18,7 @@
             margin: 0 0.3em;
             vertical-align: middle;
             cursor: pointer;
-            opacity: 1; /* נראות מלאה */
+            opacity: 1; 
             transition: all 0.3s ease;
         }
         
@@ -28,17 +28,17 @@
             display: block;
         }
         
-        /* מצב פעיל (לאחר לחיצה) */
+        /* מצב פעיל (לאחר לחיצה מוקדמת) */
         .gragger-icon.active {
-            transform: scale(1.3);
             background-color: rgba(255, 204, 0, 0.2);
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
         }
 
-        /* אנימציית סיבוב ורעש בזמן הניעור */
+        /* אנימציית סיבוב בזמן הניעור בלבד */
         .gragger-icon.spinning {
             animation: shake-gragger 0.15s infinite alternate ease-in-out;
+            transform: scale(1.3);
         }
 
         @keyframes shake-gragger {
@@ -59,11 +59,14 @@
             font-family: 'Heebo', sans-serif;
             font-weight: bold;
             font-size: 1rem;
+            text-align: center;
             z-index: 9999;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
+            width: 80%;
+            max-width: 400px;
         }
         .toast-notification.show { opacity: 1; }
     </style>
@@ -118,10 +121,10 @@
 <!-- הודעה צפה עבור חיישן הרעשן -->
 <div id="toast" class="toast-notification"></div>
 
-<!-- קבצים עם גרסה 3 כדי להתגבר על שמירת מטמון בטלפון -->
-<script src="firebase-setup.js?v=3"></script>
-<script src="megillahData.js?v=3"></script>
-<script src="megillahDataNoNikkud.js?v=3"></script>
+<!-- קבצים עם גרסה 4 כדי לעקוף שמירת מטמון -->
+<script src="firebase-setup.js?v=4"></script>
+<script src="megillahData.js?v=4"></script>
+<script src="megillahDataNoNikkud.js?v=4"></script>
 
 <script>
     let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
@@ -131,11 +134,13 @@
 
     // === הגדרות מערכת השמע של הרעשן ===
     const graggerAudio = new Audio('gragger.mp3'); 
-    graggerAudio.preload = 'auto'; // טעינה מוקדמת של השמע
+    graggerAudio.preload = 'auto'; 
+    graggerAudio.loop = true; // כדי שהסאונד לא ייפסק באמצע ניעור ארוך
 
     let isGraggerModeActive = false;
     let currentActiveGraggerEl = null;
     let lastAccX = null, lastAccY = null, lastAccZ = null;
+    let shakeStopTimeout = null; // טיימר לעצירת השמע כשמפסיקים לנענע
 
     window.onload = () => { setupNav(); loadChapter(1); };
 
@@ -158,7 +163,7 @@
     // === פונקציה: החלפת ### ברעשן ===
     function insertGraggers(text) {
         const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="20" y="10" width="24" height="24" fill="#D2691E" stroke="#8B4513" stroke-width="2"/><rect x="29" y="34" width="6" height="26" fill="#8B4513"/><circle cx="32" cy="22" r="4" fill="#FFD700"/></svg>`;
-        const graggerHtml = `<span class="gragger-icon" onclick="activateGragger(this)" title="לחץ עלי ונער את הטלפון!">${svgIcon}</span>`;
+        const graggerHtml = `<span class="gragger-icon" onclick="activateGragger(this)">${svgIcon}</span>`;
         return text.replace(/###/g, graggerHtml);
     }
 
@@ -180,25 +185,30 @@
             span.innerHTML = `<span class="text-with">${verseHtml}${clean}</span>`;
             area.appendChild(span);
         });
+
+        // בדיקה האם יש רעשנים בפרק הזה, ואם כן - הקפצת ההודעה הראשונה
+        setTimeout(() => {
+            if (document.querySelectorAll('.gragger-icon').length > 0) {
+                showToast("להרעשה עם רעשן וירטואלי - לחצו על הרעשן! 🪇", 4000);
+            }
+        }, 800);
     }
 
     // === לוגיקת הרעשן ושקשוק המכשיר ===
     function activateGragger(element) {
-        // התיקון הקריטי: שחרור חסימת שמע של הדפדפן (חובה ללחוץ פיזית פעם אחת)
-        graggerAudio.currentTime = 0;
+        // שחרור חסימת שמע באופן "שקט" (ווליום 0) כדי שלא ירעיש בלחיצה
+        graggerAudio.volume = 0;
         let playPromise = graggerAudio.play();
         if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log("הדפדפן עדיין חוסם שמע:", error);
-            });
+            playPromise.then(() => {
+                graggerAudio.pause();
+                graggerAudio.volume = 1; // החזרת הווליום למקסימום לקראת הניעור
+            }).catch(error => console.log("Audio silent unlock failed:", error));
         }
 
-        // הפעלת אנימציה קצרה כחיווי ללחיצה
-        element.classList.add('spinning');
-        setTimeout(() => element.classList.remove('spinning'), 300);
-
-        // אם כבר הופעל בעבר, אל תבקש שוב הרשאה, מספיק שהשמענו קול הרגע
+        // אם כבר לחצו בעבר, לא צריך לבקש שוב הרשאה
         if (element.classList.contains('active')) {
+            showToast("נער את הטלפון עכשיו כדי להרעיש! 🪇", 2500);
             return;
         }
 
@@ -209,13 +219,12 @@
                     if (permissionState === 'granted') {
                         enableShakeFeature(element);
                     } else {
-                        showToast("הפעלה בשקשוק נחסמה. לחץ עלי כדי להרעיש!");
-                        enableClickOnlyFeature(element);
+                        showToast("הפעלה בשקשוק נחסמה. אין אפשרות להרעיש.");
                     }
                 })
                 .catch(console.error);
         } else {
-            // מכשירים שלא דורשים אישור מיוחד (אנדרואיד/מחשב)
+            // מכשירים שלא דורשים אישור מיוחד (אנדרואיד)
             enableShakeFeature(element);
         }
     }
@@ -226,21 +235,17 @@
         currentActiveGraggerEl = element;
         isGraggerModeActive = true;
         
-        showToast("נער את הטלפון עכשיו כדי להרעיש! 🪇");
+        // ההודעה השנייה: מעולה, עכשיו לנער!
+        showToast("מעולה! עכשיו נער את הטלפון כדי להרעיש 🪇", 3500);
         
         window.removeEventListener('devicemotion', handleMotion);
         window.addEventListener('devicemotion', handleMotion);
     }
 
-    function enableClickOnlyFeature(element) {
-        resetAllGraggers();
-        element.classList.add('active');
-        currentActiveGraggerEl = element;
-    }
-
     function resetAllGraggers() {
         document.querySelectorAll('.gragger-icon').forEach(el => el.classList.remove('active', 'spinning'));
         isGraggerModeActive = false;
+        stopGraggerEffect(); // מוודא שהקול נעצר
         window.removeEventListener('devicemotion', handleMotion);
     }
 
@@ -255,40 +260,47 @@
             let deltaY = Math.abs(acc.y - lastAccY);
             let deltaZ = Math.abs(acc.z - lastAccZ);
 
-            // עוצמת הניעור - סף רגישות 15
-            if (deltaX + deltaY + deltaZ > 15) {
-                triggerGraggerEffect();
+            // עוצמת הניעור - ברגע שיש תזוזה, מפעיל את הרעשן
+            if (deltaX + deltaY + deltaZ > 12) {
+                startGraggerEffect();
             }
         }
         lastAccX = acc.x; lastAccY = acc.y; lastAccZ = acc.z;
     }
 
-    let effectTimeout;
-    function triggerGraggerEffect() {
-        // הפעלת שמע בזמן הניעור
-        if (graggerAudio.paused || graggerAudio.currentTime > 0.1) {
-            graggerAudio.currentTime = 0;
-            let playPromise = graggerAudio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(e => console.log("הדפדפן חסם שמע בזמן ניעור", e));
-            }
+    // מתחיל את הרעש והאנימציה (קורה שוב ושוב כל עוד מנערים)
+    function startGraggerEffect() {
+        // מפעיל שמע רק אם הוא מושהה
+        if (graggerAudio.paused) {
+            graggerAudio.play().catch(e => console.log("Blocked:", e));
         }
 
-        // הפעלת אנימציה
-        if (currentActiveGraggerEl) {
+        if (currentActiveGraggerEl && !currentActiveGraggerEl.classList.contains('spinning')) {
             currentActiveGraggerEl.classList.add('spinning');
-            clearTimeout(effectTimeout);
-            effectTimeout = setTimeout(() => {
-                if(currentActiveGraggerEl) currentActiveGraggerEl.classList.remove('spinning');
-            }, 300);
+        }
+
+        // מאפס את טיימר העצירה. אם במשך רבע שנייה אין תזוזה - זה יעצור הכל.
+        clearTimeout(shakeStopTimeout);
+        shakeStopTimeout = setTimeout(stopGraggerEffect, 250);
+    }
+
+    // עוצר את הרעש והאנימציה באופן מיידי
+    function stopGraggerEffect() {
+        graggerAudio.pause();
+        // לא מאפסים ל-0 כדי שהרעש ימשיך בטבעיות בניעור הבא
+        
+        if (currentActiveGraggerEl) {
+            currentActiveGraggerEl.classList.remove('spinning');
         }
     }
 
-    function showToast(msg) {
+    let toastTimeout;
+    function showToast(msg, duration = 3000) {
         const toast = document.getElementById('toast');
         toast.innerText = msg;
         toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), duration);
     }
     // ==========================================
 
