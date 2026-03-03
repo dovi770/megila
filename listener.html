@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>קול קורא המגילה - מעקב שומעים</title>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+<header>
+    <div class="header-text">
+        <h1 onclick="window.location.href='index.html'">קול קורא המגילה</h1>
+        <h2>הברה ספרדית מדויקת ע"פ מנהגי חב"ד<br>מפי הבעל קורא הרב מנחם מענדל רוזנברג שי'</h2>
+    </div>
+    <div class="header-actions">
+        <button class="mini-btn" onclick="openContactModal()">✉️ צור קשר</button>
+        <button class="mini-btn" onclick="window.location.href='admin.html'" title="ניהול">⚙️</button>
+    </div>
+</header>
+
+<nav class="top-nav-bar"><div class="chapter-nav" id="chapterNav"></div></nav>
+
+<div class="tikkun-wrapper">
+    <main id="mainWrapper">
+        <div id="dualContainer" class="column mode-chumash">
+            <div class="text-content" id="textContentArea"></div>
+        </div>
+    </main>
+    <div class="bottom-nav-btns" id="bottomNav"></div>
+</div>
+
+<div class="bottom-player-bar" id="listenerBar">
+    <div class="player-content">
+        <div style="display:flex; gap:8px; flex:1;">
+            <button class="mini-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()">▶ גלילה אוטומטית</button>
+            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">💨 מהירות: 1</button>
+        </div>
+        <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
+            <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
+            <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
+        </div>
+    </div>
+</div>
+
+<div id="contactModal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="close-modal" onclick="closeModals()">✖</button>
+        <h3>צור קשר עם ההנהלה</h3>
+        <div class="form-group"><label>שם:</label><input type="text" id="contactName" placeholder="הכנס את שמך..."></div>
+        <div class="form-group"><label>הודעה:</label><textarea id="contactMessage" rows="4" placeholder="כתוב את הודעתך כאן..."></textarea></div>
+        <button class="submit-btn" onclick="sendMessage()">שלח הודעה</button>
+    </div>
+</div>
+
+<script src="firebase-setup.js"></script>
+<script src="megillahData.js"></script>
+<script src="megillahDataNoNikkud.js"></script>
+
+<script>
+    let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
+    let currentChapter = 1;
+    let listenerAutoScrollInterval = null; let isListenerScrolling = false; let listenerScrollSpeedIdx = 0;
+    const listenerScrollSpeeds =[1, 1.5, 2.5, 4]; 
+
+    window.onload = () => { setupNav(); loadChapter(1); };
+
+    function highlightKamatzKatan(text, chap, vIdx) {
+        let formatted = text;
+        const targets =[{c:1,v:2,from:"מָ",to:"<span class='k-katan'>מָ</span>",originalTextPart:"מַלְכוֹ"},{c:1,v:10,from:"יָפְיָ",to:"<span class='k-katan'>יָ</span>פְיָ",originalTextPart:"יָפְיָהּ"},{c:1,v:16,from:"בְּאָ",to:"בְּ<span class='k-katan'>אָ</span>",originalTextPart:"בְּאָמְרָם"},{c:2,v:11,from:"חֳ",to:"<span class='k-katan'>חֳ</span>",originalTextPart:"חֳדָשִׁים"},{c:2,v:19,from:"בְּאָ",to:"בְּ<span class='k-katan'>אָ</span>",originalTextPart:"בְּאֱמֻנָה"},{c:3,v:3,from:"בְּאָ",to:"בְּ<span class='k-katan'>אָ</span>",originalTextPart:"בְּאָמְרָם"},{c:5,v:10,from:"עָ",to:"<span class='k-katan'>עָ</span>",originalTextPart:"עָשְׁרוֹ"},{c:6,v:11,from:"שָׁ",to:"<span class='k-katan'>שָׁ</span>",originalTextPart:"וַיָּשָׁב"},{c:8,v:3,from:"קָ",to:"<span class='k-katan'>קָ</span>",originalTextPart:"וַתָּקָם"},{c:9,v:3,from:"שָׂ",to:"<span class='k-katan'>שָׂ</span>",originalTextPart:"שָׂרֵי"},{c:10,v:1,from:"תָּ",to:"<span class='k-katan'>תָּ</span>",originalTextPart:"תָּקְפּוֹ"}];
+        targets.forEach(t => {
+            if(chap === t.c && vIdx === t.v) {
+                if (t.originalTextPart) {
+                    const wordRegex = new RegExp(`\\b${t.originalTextPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'g');
+                    formatted = formatted.replace(wordRegex, (match) => match.replace(new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), t.to));
+                } else {
+                    const simpleRegex = new RegExp(t.from.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+                    formatted = formatted.replace(simpleRegex, t.to);
+                }
+            }
+        }); return formatted;
+    }
+
+    function loadChapter(num) {
+        if (isListenerScrolling) toggleListenerScroll();
+        currentChapter = num;
+        document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
+        applyLayout(); updateBottomNav();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    function renderTextToElement(area) {
+        area.innerHTML = '';
+        const dataWithNikkud = megillahData[currentChapter] ||[];
+        area.style.fontSize = (currentFontSize + 0.15) + 'rem';
+
+        dataWithNikkud.forEach((item, idx) => {
+            const span = document.createElement('span'); span.className = 'pasuk';
+            let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
+            let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+            let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
+            let clean = verseMatch ? textWithNikkud.replace(verseMatch[1], '') : textWithNikkud;
+            span.innerHTML = `<span class="text-with">${verseHtml}${clean}</span>`;
+            area.appendChild(span);
+        });
+    }
+
+    function applyLayout() {
+        const wrapper = document.getElementById('mainWrapper'); wrapper.innerHTML = ''; 
+        const col = document.createElement('div'); col.className = 'column mode-chumash';
+        const inner = document.createElement('div'); inner.className = 'text-content'; renderTextToElement(inner); col.appendChild(inner); wrapper.appendChild(col);
+    }
+
+    function setupNav() {
+        const nav = document.getElementById('chapterNav'); const letters =["","א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'"];
+        nav.innerHTML = '';
+        for(let i=1; i<=10; i++) {
+            const btn = document.createElement('button'); btn.className = `chapter-btn ${i===1?'active':''}`;
+            btn.innerHTML = `פרק ${letters[i]}`; btn.onclick = () => loadChapter(i); nav.appendChild(btn);
+        }
+    }
+
+    function updateBottomNav() {
+        document.getElementById('bottomNav').innerHTML = `<button class="nav-btn" ${currentChapter===1?'disabled':''} onclick="loadChapter(${currentChapter-1})">פרק הקודם</button><button class="nav-btn" ${currentChapter===10?'disabled':''} onclick="loadChapter(${currentChapter+1})">פרק הבא</button>`;
+    }
+
+    function changeFontSize(d) { currentFontSize = Math.max(1.2, currentFontSize + (d * 0.15)); applyLayout(); }
+
+    function toggleListenerScroll() {
+        isListenerScrolling = !isListenerScrolling;
+        const btn = document.getElementById('listenerScrollToggleBtn');
+        if (isListenerScrolling) {
+            btn.style.background = "var(--accent-color)"; btn.style.color = "var(--primary-color)"; btn.innerHTML = "⏸ עצור גלילה";
+            listenerAutoScrollInterval = setInterval(() => {
+                window.scrollBy(0, listenerScrollSpeeds[listenerScrollSpeedIdx]);
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) toggleListenerScroll();
+            }, 30);
+        } else {
+            btn.style.background = "rgba(255,255,255,0.1)"; btn.style.color = "white"; btn.innerHTML = "▶ גלילה אוטומטית";
+            clearInterval(listenerAutoScrollInterval);
+        }
+    }
+
+    function changeListenerScrollSpeed() {
+        listenerScrollSpeedIdx = (listenerScrollSpeedIdx + 1) % listenerScrollSpeeds.length;
+        document.getElementById('listenerSpeedBtn').innerText = '💨 מהירות: ' + (listenerScrollSpeedIdx + 1);
+    }
+
+    function openContactModal() { document.getElementById('contactModal').style.display = 'flex'; }
+    function closeModals() { document.getElementById('contactModal').style.display = 'none'; }
+    function sendMessage() {
+        const name = document.getElementById('contactName').value, text = document.getElementById('contactMessage').value;
+        if(name.trim() === '' || text.trim() === '') return alert("אנא מלא את כל השדות.");
+        db.ref('messages').push({ name: name, text: text, date: new Date().toLocaleString('he-IL') }).then(() => { alert("הודעתך נשלחה בהצלחה!"); document.getElementById('contactName').value = ''; document.getElementById('contactMessage').value = ''; closeModals(); });
+    }
+</script>
+</body>
+</html>
