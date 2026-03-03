@@ -183,11 +183,9 @@
     function initSensorsOnFirstTouch() {
         if (sensorsInitialized) return;
         
-        // שחרור חסימת שמע אמיתי - מפעילים ועוצרים מיד
-        graggerAudio.play().then(() => {
-            graggerAudio.pause();
-            graggerAudio.currentTime = 0;
-        }).catch(() => {});
+        // הטריק המנצח: השמע מתנגן ברקע על ווליום 0 ללא הפסקה, ככה הדפדפן לעולם לא יחסום אותו שוב!
+        graggerAudio.volume = 0;
+        graggerAudio.play().catch(() => {});
 
         // שחרור חיישני תנועה (iOS)
         if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -213,30 +211,30 @@
     const graggerObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // הרעשן נכנס למסך
-                entry.target.classList.add('active'); // מדליק את ההילה סביבו
-                activeGraggersOnScreen++;
-                
-                if (activeGraggersOnScreen === 1) { 
-                    // רק ברעשן הראשון שנכנס למסך
-                    isGraggerAllowed = true;
-                    showToast("המן על המסך! נער את הטלפון כדי להרעיש 🪇", 3500);
+                // רק אם עוד לא סימנו אותו כפעיל
+                if (!entry.target.classList.contains('active')) {
+                    entry.target.classList.add('active'); // מדליק את ההילה סביבו
+                    activeGraggersOnScreen++;
                     
-                    // מתחילים לנגן את הסאונד ברקע על מצב השתק (עוקף חסימות מובייל)
-                    graggerAudio.volume = 0;
-                    graggerAudio.play().catch(() => {});
+                    if (activeGraggersOnScreen === 1) { 
+                        isGraggerAllowed = true;
+                        showToast("המן על המסך! נער את הטלפון כדי להרעיש 🪇", 3500);
+                        // מוודאים שהרקע ממשיך לנגן על שקט במקרה ונעצר
+                        if (graggerAudio.paused) {
+                            graggerAudio.volume = 0;
+                            graggerAudio.play().catch(() => {});
+                        }
+                    }
                 }
             } else {
-                // הרעשן יצא מהמסך
-                entry.target.classList.remove('active'); // מכבה את ההילה
-                activeGraggersOnScreen = Math.max(0, activeGraggersOnScreen - 1);
-                
-                if (activeGraggersOnScreen === 0) { 
-                    // אין יותר רעשנים על המסך - מפסיקים לגמרי
-                    isGraggerAllowed = false;
-                    graggerAudio.pause(); 
-                    graggerAudio.currentTime = 0;
-                    stopGraggerEffect(); 
+                if (entry.target.classList.contains('active')) {
+                    entry.target.classList.remove('active'); // מכבה את ההילה
+                    activeGraggersOnScreen = Math.max(0, activeGraggersOnScreen - 1);
+                    
+                    if (activeGraggersOnScreen === 0) { 
+                        isGraggerAllowed = false;
+                        stopGraggerEffect(); 
+                    }
                 }
             }
         });
@@ -296,36 +294,45 @@
 
     // === זיהוי שקשוק המכשיר ===
     function handleMotion(event) {
-        // אם אין המן גלוי על המסך, מתעלמים לגמרי משקשוק
-        if (!isGraggerAllowed) return;
-
         let acc = event.accelerationIncludingGravity;
         if (!acc) return;
 
+        // חישוב הדלתא מתבצע תמיד כדי למנוע קפיצות מתמטיות, אבל ההרעשה קורית רק אם isGraggerAllowed = true
         if (lastAccX !== null) {
             let deltaX = Math.abs(acc.x - lastAccX);
             let deltaY = Math.abs(acc.y - lastAccY);
             let deltaZ = Math.abs(acc.z - lastAccZ);
 
-            if (deltaX + deltaY + deltaZ > 12) {
+            if (isGraggerAllowed && (deltaX + deltaY + deltaZ > 12)) {
                 startGraggerEffect();
             }
         }
-        lastAccX = acc.x; lastAccY = acc.y; lastAccZ = acc.z;
+        
+        // עדכון תמידי של חיישני המיקום
+        lastAccX = acc.x; 
+        lastAccY = acc.y; 
+        lastAccZ = acc.z;
     }
 
     // מתחיל את הרעש ואת אנימציית הרעשן הענק
     function startGraggerEffect() {
-        // במקום לעשות play() שעלול להיחסם, אנחנו רק מדליקים את הווליום!
+        // מדליקים את הווליום!
         graggerAudio.volume = 1;
+        
+        // מוודאים שאם משום מה זה נעצר, מפעילים שוב
+        if (graggerAudio.paused) {
+            graggerAudio.play().catch(()=>{});
+        }
 
         // מקפיץ ומסובב את הרעשן הענק באמצע המסך
         const bigOverlay = document.getElementById('bigGraggerOverlay');
         const bigIcon = bigOverlay.querySelector('.big-gragger-icon');
         
-        bigOverlay.classList.add('show');
-        if (!bigIcon.classList.contains('spinning')) {
-            bigIcon.classList.add('spinning');
+        if (bigOverlay && bigIcon) {
+            bigOverlay.classList.add('show');
+            if (!bigIcon.classList.contains('spinning')) {
+                bigIcon.classList.add('spinning');
+            }
         }
 
         // מאפס טיימר. אם יש עצירה בניעור, זה מכבה.
@@ -335,12 +342,8 @@
 
     // עוצר את הרעש ומעלים את הרעשן הענק
     function stopGraggerEffect() {
-        // מחזיר את הווליום ל-0 (השתק) במקום לעצור, כדי שימשיך להיות מוכן לניעור הבא
-        if (isGraggerAllowed) {
-            graggerAudio.volume = 0; 
-        } else {
-            graggerAudio.pause(); // רק אם המן יצא מהמסך נעצור באמת
-        }
+        // מנמיכים חזרה את השמע ל-0 במקום לכבות
+        graggerAudio.volume = 0; 
         
         const bigOverlay = document.getElementById('bigGraggerOverlay');
         const bigIcon = bigOverlay.querySelector('.big-gragger-icon');
@@ -366,7 +369,8 @@
         graggerObserver.disconnect();
         isGraggerAllowed = false;
         activeGraggersOnScreen = 0;
-        graggerAudio.pause();
+        
+        // הפסקת האפקט (שימו לב: כבר לא מכבים את הקובץ פה אלא רק מנמיכים ל-0)
         stopGraggerEffect();
 
         currentChapter = num;
