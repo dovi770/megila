@@ -295,7 +295,8 @@
                     
                     if (activeGraggersOnScreen === 1) { 
                         isGraggerAllowed = true;
-                        showToast("המן על המסך! נער את הטלפון כדי להרעיש 🪇", 3500);
+                        // Changed toast message
+                        showToast("נער את הטלפון כדי להרעיש 🪇", 3500); 
                         if (graggerAudio.paused) {
                             graggerAudio.volume = 0;
                             graggerAudio.play().catch(() => {});
@@ -310,6 +311,7 @@
                     if (activeGraggersOnScreen === 0) { 
                         isGraggerAllowed = false;
                         stopGraggerEffect(); 
+                        hideToast(); // Hide toast when no graggers are on screen
                     }
                 }
             }
@@ -430,6 +432,13 @@
         toastTimeout = setTimeout(() => toast.classList.remove('show'), duration);
     }
 
+    // New function to hide the toast
+    function hideToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.remove('show');
+        clearTimeout(toastTimeout);
+    }
+
     function loadChapter(num) {
         if (isListenerScrolling) toggleListenerScroll();
         
@@ -437,6 +446,7 @@
         isGraggerAllowed = false;
         activeGraggersOnScreen = 0;
         stopGraggerEffect();
+        hideToast(); // Ensure toast is hidden when changing chapters
 
         currentChapter = num;
         document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
