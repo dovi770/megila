@@ -94,35 +94,46 @@
     }
     .toast-notification.show { opacity: 1; }
 
-    /* === עיצובים חדשים לרצף הפרקים והברכות === */
-    .chapter-heading {
+/* === עיצובים חדשים לרצף הפרקים והברכות === */
+    .chapter-heading, .brachot-title {
         text-align: center;
         color: #FFD700;
-        font-size: 2.5em;
-        margin: 50px 0 20px 0;
-        padding-bottom: 15px;
-        border-bottom: 2px dashed rgba(255, 215, 0, 0.3);
-        font-family: 'Frank Ruhl Libre', serif;
+        font-size: 1.25em; /* גודל פרופורציונלי ומותאם */
+        font-family: 'Heebo', sans-serif; /* פונט מודרני ונקי */
+        font-weight: 700;
+        margin: 45px auto 25px auto;
+        padding: 6px 25px;
+        background: rgba(255, 215, 0, 0.08); /* רקע עדין */
+        border-radius: 30px; /* צורה מודרנית עגולה */
+        display: table; /* גורם לרקע לעטוף רק את הטקסט ולשבת באמצע */
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
     
-    .brachot-section {
-        text-align: center;
-        margin-bottom: 40px;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
-        border: 1px solid rgba(255, 215, 0, 0.2);
+    .brachot-title {
+        margin-top: 0;
+        margin-bottom: 25px;
     }
 
-    .brachot-title {
-        color: #FFD700;
-        font-size: 2.2em;
-        margin-bottom: 20px;
-        font-family: 'Frank Ruhl Libre', serif;
+    .brachot-section {
+        margin-bottom: 50px;
+        padding: 30px 20px;
+        background: rgba(0, 0, 0, 0.15); /* רקע כהה ויוקרתי יותר */
+        border-radius: 20px;
+        border: 1px solid rgba(255, 215, 0, 0.15);
     }
 
     .brachot-text {
-        line-height: 1.8;
+        text-align: justify; /* יישור יפה לשני הצדדים (בלוק) */
+        text-justify: inter-word;
+        line-height: 1.9;
+        font-family: 'Frank Ruhl Libre', serif;
+    }
+
+    /* מוודא שיש מרווח נעים בין ברכה לברכה */
+    .brachot-text p {
+        margin-top: 0;
+        margin-bottom: 18px;
     }
 </style>
 </head>
