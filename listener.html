@@ -94,11 +94,10 @@
     }
     .toast-notification.show { opacity: 1; }
 
-/* === עיצובים חדשים לרצף הפרקים והברכות === */
-    .chapter-heading, .brachot-title {
+/* === עיצוב כותרות הפרקים (נשארות על הרקע הכהה) === */
+    .chapter-heading {
         text-align: center;
         color: #FFD700;
-        /* שימוש ב-rem מנתק את הכותרת מהגודל הענק של המגילה וקובע גודל נקי וקבוע */
         font-size: 1.2rem; 
         font-family: 'Heebo', sans-serif;
         font-weight: 700;
@@ -110,28 +109,41 @@
         border: 1px solid rgba(255, 215, 0, 0.3);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
-    
-    .brachot-title {
-        margin-top: 0;
-        margin-bottom: 20px;
-    }
 
+    /* === עיצוב אזור הברכות (קופסה בהירה ויוקרתית) === */
     .brachot-section {
         margin-bottom: 45px;
-        padding: 20px 15px;
-        background: rgba(0, 0, 0, 0.15);
+        padding: 25px 20px;
+        background: #fdf8eb; /* צבע קרם/קלף בהיר ונעים לעין */
         border-radius: 15px;
-        border: 1px solid rgba(255, 215, 0, 0.15);
+        border: 2px solid #d4af37; /* מסגרת זהב כהה שתתאים לרקע הבהיר */
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); /* צל כדי להבליט את זה מהרקע הכהה של האתר */
     }
 
+    /* עיצוב כותרת הברכות (מותאם לרקע הבהיר) */
+    .brachot-title {
+        text-align: center;
+        color: #4a2e15; /* חום כהה כדי שיבלוט על הרקע הבהיר */
+        font-size: 1.2rem; 
+        font-family: 'Heebo', sans-serif;
+        font-weight: 700;
+        margin: 0 auto 20px auto;
+        padding: 5px 20px;
+        background: rgba(212, 175, 55, 0.15); /* רקע זהב עדין לכותרת */
+        border-radius: 30px;
+        display: table;
+        border: 1px solid #d4af37;
+    }
+
+    /* עיצוב טקסט הברכות */
     .brachot-text {
         text-align: justify;
         text-justify: inter-word;
         line-height: 1.6;
         font-family: 'Frank Ruhl Libre', serif;
-        /* גודל הטקסט של הברכות יהיה 65% מהגודל של המגילה - כך שהוא תמיד יהיה קטן יותר משמעותית */
         font-size: 0.65em; 
-        color: #eeeeee; /* צבע מעט פחות בוהק מהמגילה עצמה כדי לבדל את זה */
+        color: #1a1a1a; /* טקסט כהה (כמעט שחור) לקריאה נוחה על הרקע הבהיר */
+        font-weight: 700; /* הדגשה קלה כדי שייראה ברור בגודל הקטן */
     }
 
     .brachot-text p {
