@@ -24,6 +24,12 @@
         /* הודעה צפה למשתמש (טוסט) */
         .toast-notification { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(255, 204, 0, 0.95); color: #000; padding: 10px 25px; border-radius: 30px; font-family: 'Heebo', sans-serif; font-weight: bold; font-size: 1rem; text-align: center; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; opacity: 0; transition: opacity 0.3s; width: 80%; max-width: 400px; }
         .toast-notification.show { opacity: 1; }
+
+        /* === עיצוב אזור הברכות (קופסה בהירה ויוקרתית) === */
+        .brachot-section { margin-bottom: 45px; padding: 25px 20px; background: #fdf8eb; border-radius: 15px; border: 2px solid #d4af37; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); }
+        .brachot-title { text-align: center; color: #4a2e15; font-size: 1.2rem; font-family: 'Heebo', sans-serif; font-weight: 700; margin: 0 auto 20px auto; padding: 5px 20px; background: rgba(212, 175, 55, 0.15); border-radius: 30px; display: table; border: 1px solid #d4af37; }
+        .brachot-text { text-align: justify; text-justify: inter-word; line-height: 1.6; font-family: 'Frank Ruhl Libre', serif; font-size: 0.65em; color: #1a1a1a; font-weight: 700; }
+        .brachot-text p { margin-top: 0; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -104,6 +110,7 @@
 </div>
 
 <script src="firebase-setup.js"></script>
+<script src="brachotData.js?v=1"></script> <!-- קריאה לקובץ הברכות -->
 <script src="megillahData.js"></script>
 <script src="megillahDataNoNikkud.js"></script>
 
@@ -236,7 +243,6 @@
                     
                     if (activeGraggersOnScreen === 1) { 
                         isGraggerAllowed = true;
-                        // Changed toast message
                         showToast("נער את הטלפון כדי להרעיש 🪇", 3500);
                         if (graggerAudio.paused) {
                             graggerAudio.volume = 0;
@@ -252,7 +258,7 @@
                     if (activeGraggersOnScreen === 0) { 
                         isGraggerAllowed = false;
                         stopGraggerEffect(); 
-                        hideToast(); // Hide toast when no graggers are on screen
+                        hideToast();
                     }
                 }
             }
@@ -317,7 +323,6 @@
         toastTimeout = setTimeout(() => toast.classList.remove('show'), duration);
     }
 
-    // New function to hide the toast
     function hideToast() {
         const toast = document.getElementById('toast');
         toast.classList.remove('show');
@@ -329,12 +334,12 @@
         isGraggerAllowed = false;
         activeGraggersOnScreen = 0;
         stopGraggerEffect();
-        hideToast(); // Ensure toast is hidden when resetting state
+        hideToast(); 
     }
     // ===========================================
 
     window.onload = () => { 
-        initWordCounts(); // Initialize word counts for progress bar
+        initWordCounts(); 
         setupNav(); 
         loadChapter(1); 
     };
@@ -363,7 +368,7 @@
         audio.src = `./audio/chap${num}.mp3`;
         audio.oncanplaythrough = () => audio.playbackRate = currentPlaybackRate;
         window.scrollTo({ top: 0, behavior: 'instant' });
-        updateProgress(); // Update progress bar when chapter loads
+        updateProgress(); 
     }
 
     function syncText() {
@@ -376,7 +381,7 @@
             activeSpans.forEach(s => s.classList.add('playing-now'));
             if(scrollMode === 1) window.scrollTo({ top: activeSpans[0].getBoundingClientRect().top + window.scrollY - 150, behavior: 'smooth' });
         }
-        updateProgress(); // Update progress bar during playback
+        updateProgress();
     }
 
     function renderTextToElement(area, isDual, isChumashMode = false) {
@@ -410,12 +415,11 @@
             area.appendChild(span);
         });
 
-        // חיבור הצופה (Observer) לכל הרעשנים שנוצרו (כדי שיפעל גם בתצוגת שתי עמודות)
         setTimeout(() => {
             document.querySelectorAll('.gragger-icon').forEach(el => {
                 graggerObserver.observe(el);
             });
-            updateProgress(); // Update progress after rendering text
+            updateProgress(); 
         }, 100);
     }
 
@@ -430,6 +434,16 @@
     function applyLayout() {
         const wrapper = document.getElementById('mainWrapper');
         wrapper.innerHTML = ''; 
+
+        // הוספת הברכות מעל הטקסט / העמודות, רק אם אנחנו בפרק א'
+        if (currentChapter === 1 && typeof brachotData !== 'undefined') {
+            const brachotDiv = document.createElement('div');
+            brachotDiv.className = 'brachot-section';
+            brachotDiv.style.fontSize = currentFontSize + 'rem'; // קבלת קנה מידה יחסי
+            brachotDiv.innerHTML = `<h2 class="brachot-title">ברכות המגילה</h2><div class="brachot-text">${brachotData}</div>`;
+            wrapper.appendChild(brachotDiv);
+        }
+
         if (displayMode === 2) { 
             const grid = document.createElement('div'); grid.className = 'dual-view-container';
             const col1 = document.createElement('div'); col1.className = 'column mode-chumash'; 
