@@ -22,9 +22,16 @@
 
 <script src="firebase-setup.js"></script>
 <script>
-    // תיעוד כניסה לאתר רק בעמוד הבית
+    // תיעוד כניסה לאתר רק בעמוד הבית - מכשירים ייחודיים בלבד
     window.onload = () => {
-        db.ref('stats/visits').set(firebase.database.ServerValue.increment(1));
+        // בודק אם המכשיר הזה כבר ביקר באתר בעבר
+        if (!localStorage.getItem('megilla_visited_device')) {
+            // אם המכשיר חדש - שומרים לו זיכרון בדפדפן כדי שלא ייספר שוב
+            localStorage.setItem('megilla_visited_device', 'true');
+            
+            // מעדכן את המספר ב-Firebase (מוסיף 1 למונה המכשירים הייחודיים)
+            db.ref('stats/uniqueVisitors').set(firebase.database.ServerValue.increment(1));
+        }
     };
 </script>
 </body>
