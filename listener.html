@@ -93,6 +93,37 @@
         max-width: 400px;
     }
     .toast-notification.show { opacity: 1; }
+
+    /* === עיצובים חדשים לרצף הפרקים והברכות === */
+    .chapter-heading {
+        text-align: center;
+        color: #FFD700;
+        font-size: 2.5em;
+        margin: 50px 0 20px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px dashed rgba(255, 215, 0, 0.3);
+        font-family: 'Frank Ruhl Libre', serif;
+    }
+    
+    .brachot-section {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .brachot-title {
+        color: #FFD700;
+        font-size: 2.2em;
+        margin-bottom: 20px;
+        font-family: 'Frank Ruhl Libre', serif;
+    }
+
+    .brachot-text {
+        line-height: 1.8;
+    }
 </style>
 </head>
 <body>
@@ -108,15 +139,12 @@
     </div>
 </header>
 
-<nav class="top-nav-bar"><div class="chapter-nav" id="chapterNav"></div></nav>
-
 <div class="tikkun-wrapper">
     <main id="mainWrapper">
         <div id="dualContainer" class="column mode-chumash">
             <div class="text-content" id="textContentArea"></div>
         </div>
     </main>
-    <div class="bottom-nav-btns" id="bottomNav"></div>
 </div>
 
 <div class="bottom-player-bar" id="listenerBar">
@@ -161,14 +189,14 @@
     </div>
 </div>
 
-<!-- קבצים עם גרסה 5 כדי לעקוף שמירת מטמון -->
+<!-- קבצים חיצוניים -->
 <script src="firebase-setup.js?v=5"></script>
+<script src="brachotData.js?v=1"></script> <!-- קובץ הברכות החדש -->
 <script src="megillahData.js?v=5"></script>
 <script src="megillahDataNoNikkud.js?v=5"></script>
 
 <script>
     let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
-    let currentChapter = 1;
     let listenerAutoScrollInterval = null; let isListenerScrolling = false; let listenerScrollSpeedIdx = 0;
     const listenerScrollSpeeds =[1, 1.5, 2.5, 4]; 
 
@@ -208,28 +236,36 @@
         }
     }
 
-    function getActivePasukIndex() {
+    // מציאת הפסוק שכרגע על המסך (מותאם לרצף מלא)
+    function getActivePasuk() {
         let pesukim = document.querySelectorAll('.pasuk');
-        if (pesukim.length === 0) return 0;
+        if (pesukim.length === 0) return {c: 1, idx: 0};
         for (let p of pesukim) {
             let rect = p.getBoundingClientRect();
             if (rect.bottom > 120) {
-                return parseInt(p.dataset.index) || 0;
+                return {
+                    c: parseInt(p.dataset.chapter) || 1,
+                    idx: parseInt(p.dataset.index) || 0
+                };
             }
         }
-        return pesukim.length - 1;
+        let last = pesukim[pesukim.length - 1];
+        return {
+            c: parseInt(last.dataset.chapter) || 10,
+            idx: parseInt(last.dataset.index) || 0
+        };
     }
 
-    // מחשב כמה מילים נקראו במצטבר מתחילת פרק א'
-    function getCurrentWordsRead(activeIdx) {
+    // מחשב כמה מילים נקראו במצטבר (מותאם לרצף מלא)
+    function getCurrentWordsRead(active) {
         let read = 0;
-        for (let c = 1; c < currentChapter; c++) {
+        for (let c = 1; c < active.c; c++) {
             if (chapWordCounts[c]) read += chapWordCounts[c].total;
         }
-        if (chapWordCounts[currentChapter]) {
-            for (let i = 0; i <= activeIdx; i++) {
-                if (chapWordCounts[currentChapter].pesukim[i]) {
-                    read += chapWordCounts[currentChapter].pesukim[i];
+        if (chapWordCounts[active.c]) {
+            for (let i = 0; i <= active.idx; i++) {
+                if (chapWordCounts[active.c].pesukim[i]) {
+                    read += chapWordCounts[active.c].pesukim[i];
                 }
             }
         }
@@ -240,8 +276,8 @@
     function updateProgress() {
         if (totalMegillahWords === 0) return;
         
-        let activeIdx = getActivePasukIndex();
-        let currentWords = getCurrentWordsRead(activeIdx);
+        let active = getActivePasuk();
+        let currentWords = getCurrentWordsRead(active);
         let percent = (currentWords / totalMegillahWords) * 100;
         
         // מוודא שהאחוזים לא עפים מעל 100
@@ -295,7 +331,6 @@
                     
                     if (activeGraggersOnScreen === 1) { 
                         isGraggerAllowed = true;
-                        // Changed toast message
                         showToast("נער את הטלפון כדי להרעיש 🪇", 3500); 
                         if (graggerAudio.paused) {
                             graggerAudio.volume = 0;
@@ -311,7 +346,7 @@
                     if (activeGraggersOnScreen === 0) { 
                         isGraggerAllowed = false;
                         stopGraggerEffect(); 
-                        hideToast(); // Hide toast when no graggers are on screen
+                        hideToast();
                     }
                 }
             }
@@ -320,8 +355,7 @@
 
     window.onload = () => { 
         initWordCounts(); 
-        setupNav(); 
-        loadChapter(1); 
+        loadContent(); 
     };
 
     function highlightKamatzKatan(text, chap, vIdx) {
@@ -348,29 +382,52 @@
 
     function renderTextToElement(area) {
         area.innerHTML = '';
-        const dataWithNikkud = megillahData[currentChapter] ||[];
         area.style.fontSize = (currentFontSize + 0.15) + 'rem';
 
-        dataWithNikkud.forEach((item, idx) => {
-            const span = document.createElement('span'); 
-            span.className = 'pasuk';
-            span.dataset.index = idx; 
-            
-            let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
-            textWithNikkud = insertGraggers(textWithNikkud);
-            
-            let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
-            let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
-            let clean = verseMatch ? textWithNikkud.replace(verseMatch[1], '') : textWithNikkud;
-            span.innerHTML = `<span class="text-with">${verseHtml}${clean}</span>`;
-            area.appendChild(span);
-        });
+        // הוספת הברכות בהתחלה (נשאבות מהקובץ החיצוני)
+        if (typeof brachotData !== 'undefined') {
+            const brachotDiv = document.createElement('div');
+            brachotDiv.className = 'brachot-section';
+            brachotDiv.innerHTML = `<h2 class="brachot-title">ברכות המגילה</h2><div class="brachot-text">${brachotData}</div>`;
+            area.appendChild(brachotDiv);
+        }
+
+        const letters = ["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
+
+        // לולאה שעוברת על כל עשרת הפרקים ומדפיסה אותם ברצף
+        for (let c = 1; c <= 10; c++) {
+            const dataWithNikkud = megillahData[c] || [];
+            if (dataWithNikkud.length === 0) continue;
+
+            // יצירת כותרת יפה לכל פרק
+            const heading = document.createElement('h2');
+            heading.className = 'chapter-heading';
+            heading.innerText = `פרק ${letters[c]}`;
+            area.appendChild(heading);
+
+            // הדפסת הפסוקים של אותו פרק
+            dataWithNikkud.forEach((item, idx) => {
+                const span = document.createElement('span'); 
+                span.className = 'pasuk';
+                span.dataset.chapter = c; // תגית שעוזרת למדוד את ההתקדמות ברצף
+                span.dataset.index = idx; 
+                
+                let textWithNikkud = highlightKamatzKatan(item.t, c, idx);
+                textWithNikkud = insertGraggers(textWithNikkud);
+                
+                let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
+                let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
+                let clean = verseMatch ? textWithNikkud.replace(verseMatch[1], '') : textWithNikkud;
+                span.innerHTML = `<span class="text-with">${verseHtml}${clean}</span>`;
+                area.appendChild(span);
+            });
+        }
 
         setTimeout(() => {
             document.querySelectorAll('.gragger-icon').forEach(el => {
                 graggerObserver.observe(el);
             });
-            updateProgress(); // עדכון הפס לאחר טעינת הפסוקים
+            updateProgress();
         }, 100);
     }
 
@@ -432,25 +489,23 @@
         toastTimeout = setTimeout(() => toast.classList.remove('show'), duration);
     }
 
-    // New function to hide the toast
     function hideToast() {
         const toast = document.getElementById('toast');
         toast.classList.remove('show');
         clearTimeout(toastTimeout);
     }
 
-    function loadChapter(num) {
+    // טעינת התוכן הכולל במקום פרק בודד
+    function loadContent() {
         if (isListenerScrolling) toggleListenerScroll();
         
         graggerObserver.disconnect();
         isGraggerAllowed = false;
         activeGraggersOnScreen = 0;
         stopGraggerEffect();
-        hideToast(); // Ensure toast is hidden when changing chapters
+        hideToast(); 
 
-        currentChapter = num;
-        document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
-        applyLayout(); updateBottomNav();
+        applyLayout(); 
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
@@ -458,19 +513,6 @@
         const wrapper = document.getElementById('mainWrapper'); wrapper.innerHTML = ''; 
         const col = document.createElement('div'); col.className = 'column mode-chumash';
         const inner = document.createElement('div'); inner.className = 'text-content'; renderTextToElement(inner); col.appendChild(inner); wrapper.appendChild(col);
-    }
-
-    function setupNav() {
-        const nav = document.getElementById('chapterNav'); const letters =["","א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'"];
-        nav.innerHTML = '';
-        for(let i=1; i<=10; i++) {
-            const btn = document.createElement('button'); btn.className = `chapter-btn ${i===1?'active':''}`;
-            btn.innerHTML = `פרק ${letters[i]}`; btn.onclick = () => loadChapter(i); nav.appendChild(btn);
-        }
-    }
-
-    function updateBottomNav() {
-        document.getElementById('bottomNav').innerHTML = `<button class="nav-btn" ${currentChapter===1?'disabled':''} onclick="loadChapter(${currentChapter-1})">פרק הקודם</button><button class="nav-btn" ${currentChapter===10?'disabled':''} onclick="loadChapter(${currentChapter+1})">פרק הבא</button>`;
     }
 
     function changeFontSize(d) { 
