@@ -16,7 +16,8 @@
         <button class="close-modal" onclick="window.location.href='index.html'">חזור לאתר</button>
         <h3>פאנל ניהול (מחובר לענן)</h3>
         <div class="admin-stats">
-            <p>👁️ סך כל הכניסות לאתר: <span id="adminVisits">טוען...</span></p>
+            <!-- שונה כדי להציג מכשירים ייחודיים -->
+            <p>📱 מכשירים ייחודיים שביקרו באתר: <span id="adminUniqueVisits">טוען...</span></p>
             <p>🎧 סך כל ההשמעות (Play): <span id="adminPlays">טוען...</span></p>
             <button class="mini-btn" onclick="clearAdminData()" style="background: darkred; margin-top: 10px;">מחק את כל הנתונים</button>
         </div>
@@ -60,7 +61,10 @@
     };
 
     function updateAdminDashboard() {
-        db.ref('stats/visits').once('value').then(snap => document.getElementById('adminVisits').innerText = snap.val() || 0);
+        // משיכת נתוני המכשירים הייחודיים במקום כניסות כלליות
+        db.ref('stats/uniqueVisitors').once('value').then(snap => {
+            document.getElementById('adminUniqueVisits').innerText = snap.val() || 0;
+        });
 
         db.ref('messages').once('value').then(snap => {
             const msgList = document.getElementById('adminMessagesList'); msgList.innerHTML = '';
