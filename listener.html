@@ -150,6 +150,24 @@
         margin-top: 0;
         margin-bottom: 15px;
     }
+
+    /* === הנפשות חדשות === */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    header { animation: slideDown 0.8s ease-out; }
+    .tikkun-wrapper { animation: fadeIn 1s ease-out 0.3s backwards; }
+    .bottom-player-bar { animation: slideUp 0.8s ease-out 0.6s backwards; }
 </style>
 </head>
 <body>
@@ -182,7 +200,7 @@
     <div class="player-content">
         <div style="display:flex; gap:8px; flex:1;">
             <button class="mini-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()">▶ גלילה אוטומטית</button>
-            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">💨 מהירות: 1</button>
+            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">⏱ זמן: 25 דק'</button>
         </div>
         <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
             <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
@@ -223,8 +241,12 @@
 
 <script>
     let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
-    let listenerAutoScrollInterval = null; let isListenerScrolling = false; let listenerScrollSpeedIdx = 0;
-    const listenerScrollSpeeds =[1, 1.5, 2.5, 4]; 
+    let listenerAutoScrollInterval = null; 
+    let isListenerScrolling = false; 
+    let listenerScrollSpeedIdx = 0;
+    const listenerScrollSpeeds = [25, 30, 35, 40]; // משך גלילה בדקות לכל המגילה
+    let scrollAccumulator = 0;
+    let isPausedByGragger = false; // משתנה לעצירת הגלילה בזמן רעשן
 
     // === הגדרות מערכת השמע של הרעשן ===
     const graggerAudio = new Audio('gragger.mp3'); 
@@ -449,6 +471,19 @@
             });
         }
 
+        // הוספת הברכות שלאחר הקריאה בסוף העמוד
+        const endBrachotDiv = document.createElement('div');
+        endBrachotDiv.className = 'brachot-section';
+        endBrachotDiv.style.marginTop = '40px';
+        endBrachotDiv.innerHTML = `
+            <h2 class="brachot-title">ברכות לאחר קריאת המגילה</h2>
+            <div class="brachot-text">
+                <p>בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, הָרָב אֶת רִיבֵנוּ וְהַדָּן אֶת דִּינֵנוּ וְהַנּוֹקֵם אֶת נִקְמָתֵנוּ, וְהַמְשַׁלֵּם גְּמוּל לְכָל אוֹיְבֵי נַפְשֵׁנוּ וְהַנִּפְרָע לָנוּ מִצָּרֵינוּ. בָּרוּךְ אַתָּה יְהֹוָה, הַנִּפְרָע לְעַמּוֹ יִשְׂרָאֵל מִכָּל צָרֵיהֶם, הָאֵל הַמּוֹשִׁיעַ.</p>
+                <p>שׁוֹשַׁנַּת יַעֲקֹב צָהֲלָה וְשָׂמֵחָה, בִּרְאוֹתָם יַחַד תְּכֵלֶת מָרְדְּכָי. תְּשׁוּעָתָם הָיִיתָ לָנֶצַח, וְתִקְוָתָם בְּכָל דּוֹר וָדוֹר. לְהוֹדִיעַ שֶׁכָּל קֹוֶיךָ לֹא יֵבֹשׁוּ, וְלֹא יִכָּלְמוּ לָנֶצַח כָּל הַחוֹסִים בָּךְ. אָרוּר הָמָן אֲשֶׁר בִּקֵּשׁ לְאַבְּדִי, בָּרוּךְ מָרְדְּכַי הַיְּהוּדִי. אֲרוּרָה זֶרֶשׁ אֵשֶׁת מַפְחִידִי, בְּרוּכָה אֶסְתֵּר בַּעֲדִי. אֲרוּרִים כָּל הָרְשָׁעִים, בְּרוּכִים כָּל הַצַּדִּיקִים. וְגַם חַרְבוֹנָה זָכוּר לַטּוֹב.</p>
+            </div>
+        `;
+        area.appendChild(endBrachotDiv);
+
         setTimeout(() => {
             document.querySelectorAll('.gragger-icon').forEach(el => {
                 graggerObserver.observe(el);
@@ -477,6 +512,11 @@
     }
 
     function startGraggerEffect() {
+        // אם הגלילה פעילה - עוצר אותה באופן זמני בגלל הרעשן
+        if (isListenerScrolling && !isPausedByGragger) {
+            isPausedByGragger = true;
+        }
+
         graggerAudio.volume = 1;
         if (graggerAudio.paused) {
             graggerAudio.play().catch(()=>{});
@@ -497,6 +537,11 @@
     }
 
     function stopGraggerEffect() {
+        // מחזיר את הגלילה אם נעצרה בגלל הרעשן
+        if (isPausedByGragger) {
+            isPausedByGragger = false;
+        }
+
         graggerAudio.volume = 0; 
         
         const bigOverlay = document.getElementById('bigGraggerOverlay');
@@ -523,11 +568,13 @@
 
     // טעינת התוכן הכולל במקום פרק בודד
     function loadContent() {
-        if (isListenerScrolling) toggleListenerScroll();
+        if (isListenerScrolling) toggleListenerScroll(false);
         
         graggerObserver.disconnect();
         isGraggerAllowed = false;
         activeGraggersOnScreen = 0;
+        isPausedByGragger = false;
+        scrollAccumulator = 0;
         stopGraggerEffect();
         hideToast(); 
 
@@ -547,24 +594,58 @@
         setTimeout(updateProgress, 100); 
     }
 
-    function toggleListenerScroll() {
-        isListenerScrolling = !isListenerScrolling;
-        const btn = document.getElementById('listenerScrollToggleBtn');
-        if (isListenerScrolling) {
-            btn.style.background = "var(--accent-color)"; btn.style.color = "var(--primary-color)"; btn.innerHTML = "⏸ עצור גלילה";
-            listenerAutoScrollInterval = setInterval(() => {
-                window.scrollBy(0, listenerScrollSpeeds[listenerScrollSpeedIdx]);
-                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) toggleListenerScroll();
-            }, 30);
+    // פונקציית הגלילה החדשה מבוססת זמן מדויק
+    function toggleListenerScroll(forceState) {
+        if (forceState !== undefined) {
+            isListenerScrolling = forceState;
         } else {
-            btn.style.background = "rgba(255,255,255,0.1)"; btn.style.color = "white"; btn.innerHTML = "▶ גלילה אוטומטית";
+            isListenerScrolling = !isListenerScrolling;
+        }
+        
+        const btn = document.getElementById('listenerScrollToggleBtn');
+        
+        if (isListenerScrolling) {
+            btn.style.background = "var(--accent-color)"; 
+            btn.style.color = "var(--primary-color)"; 
+            btn.innerHTML = "⏸ עצור גלילה";
+            
+            if (!listenerAutoScrollInterval) {
+                listenerAutoScrollInterval = setInterval(() => {
+                    // אם הרעשן פועל עכשיו, המערכת מדלגת על הגלילה
+                    if (isPausedByGragger) return; 
+                    
+                    const durationMins = listenerScrollSpeeds[listenerScrollSpeedIdx];
+                    const durationMs = durationMins * 60 * 1000;
+                    const totalScrollableHeight = Math.max(0, document.body.scrollHeight - window.innerHeight);
+                    
+                    const totalTicks = durationMs / 30;
+                    const pixelsPerTick = totalScrollableHeight / totalTicks;
+                    
+                    scrollAccumulator += pixelsPerTick;
+                    
+                    if (scrollAccumulator >= 1) {
+                        const scrollAmount = Math.floor(scrollAccumulator);
+                        window.scrollBy(0, scrollAmount);
+                        scrollAccumulator -= scrollAmount;
+                    }
+                    
+                    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 5) {
+                        toggleListenerScroll(false);
+                    }
+                }, 30);
+            }
+        } else {
+            btn.style.background = "rgba(255,255,255,0.1)"; 
+            btn.style.color = "white"; 
+            btn.innerHTML = "▶ גלילה אוטומטית";
             clearInterval(listenerAutoScrollInterval);
+            listenerAutoScrollInterval = null;
         }
     }
 
     function changeListenerScrollSpeed() {
         listenerScrollSpeedIdx = (listenerScrollSpeedIdx + 1) % listenerScrollSpeeds.length;
-        document.getElementById('listenerSpeedBtn').innerText = '💨 מהירות: ' + (listenerScrollSpeedIdx + 1);
+        document.getElementById('listenerSpeedBtn').innerText = '⏱ זמן: ' + listenerScrollSpeeds[listenerScrollSpeedIdx] + ' דק\'';
     }
 
     function openContactModal() { document.getElementById('contactModal').style.display = 'flex'; }
