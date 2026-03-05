@@ -163,6 +163,86 @@
         cursor: pointer;
     }
 
+    /* === עיצוב חלון בחירת מהירות כניסה === */
+    #speedSelectionOverlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: none; /* יופעל אוטומטית בטעינה */
+        justify-content: center;
+        align-items: center;
+        z-index: 10005;
+        backdrop-filter: blur(5px);
+    }
+
+    .speed-modal {
+        background: linear-gradient(135deg, #1e1e1e, #121212);
+        border: 2px solid #FFD700;
+        border-radius: 20px;
+        padding: 25px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        animation: slideDown 0.5s ease-out;
+    }
+
+    .speed-modal h2 {
+        color: #FFD700;
+        font-family: 'Heebo', sans-serif;
+        font-size: 1.4rem;
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+
+    .speed-modal p {
+        color: #ccc;
+        font-family: 'Heebo', sans-serif;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+
+    .speed-options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .speed-options button {
+        background: rgba(255, 215, 0, 0.1);
+        color: #fff;
+        border: 1px solid rgba(255, 215, 0, 0.4);
+        padding: 12px;
+        border-radius: 10px;
+        font-family: 'Heebo', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .speed-options button:hover, .speed-options button:active {
+        background: rgba(255, 215, 0, 0.3);
+        transform: scale(1.02);
+    }
+
+    .speed-options button span {
+        font-weight: 400;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .close-speed-btn {
+        background: none;
+        border: none;
+        color: #888;
+        text-decoration: underline;
+        font-family: 'Heebo', sans-serif;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
     /* === הנפשות חדשות === */
     @keyframes fadeIn {
         from { opacity: 0; }
@@ -178,6 +258,22 @@
 </style>
 </head>
 <body>
+
+<!-- חלון בחירת מהירות גלילה בפתיחת העמוד -->
+<div id="speedSelectionOverlay">
+    <div class="speed-modal">
+        <h2>בחירת מסלול קריאה</h2>
+        <p>כדי שהגלילה האוטומטית תהיה מדויקת, בחר את קצב הקריאה של הבעל קורא שלך:</p>
+        <div class="speed-options">
+            <button onclick="selectSpeed(0)">20 דקות <span>(מהר מאוד)</span></button>
+            <button onclick="selectSpeed(1)">25 דקות <span>(מהיר)</span></button>
+            <button onclick="selectSpeed(2)">30 דקות <span>(רגיל)</span></button>
+            <button onclick="selectSpeed(3)">35 דקות <span>(מתון)</span></button>
+            <button onclick="selectSpeed(4)">40 דקות <span>(נינוח)</span></button>
+        </div>
+        <button class="close-speed-btn" onclick="closeSpeedOverlay()">סגור ואגלול ידנית</button>
+    </div>
+</div>
 
 <header>
     <div class="header-text">
@@ -206,13 +302,13 @@
     
     <div class="player-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <div style="display:flex; gap:8px; flex:1;">
-            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">⏱ זמן: 20 דק'</button>
+            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">⏱ מסלול: 30 דק'</button>
         </div>
         
         <div style="display:flex; flex-direction: column; align-items: center; flex:1.5; justify-content: center;">
             <button class="play-pause-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">▶ גלילה אוטומטית</button>
             <div id="scrollTimers" style="font-size: 0.8rem; font-family: 'Heebo', sans-serif; color: #fff; margin-top: 5px; display: none; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-                <span id="timeElapsedStr">00:00</span> / <span id="timeRemainingStr">-20:00</span>
+                <span id="timeElapsedStr">00:00</span> / <span id="timeRemainingStr">-30:00</span>
             </div>
         </div>
 
@@ -249,7 +345,7 @@
 
 <!-- קבצים חיצוניים -->
 <script src="firebase-setup.js?v=5"></script>
-<script src="brachotData.js?v=2"></script> <!-- קובץ הברכות - יש להוסיף שם את endBrachotData -->
+<script src="brachotData.js?v=2"></script> 
 <script src="megillahData.js?v=5"></script>
 <script src="megillahDataNoNikkud.js?v=5"></script>
 
@@ -257,8 +353,11 @@
     let currentFontSize = window.innerWidth < 768 ? 1.7 : 2.5; 
     let listenerAutoScrollInterval = null; 
     let isListenerScrolling = false; 
-    let listenerScrollSpeedIdx = 0;
-    const listenerScrollSpeeds = [20, 25, 30, 35, 40]; // משך גלילה בדקות לכל המגילה
+    
+    // רשימת הזמנים מ-20 עד 40 דקות (ברירת מחדל לאינדקס 2 = 30 דקות)
+    const listenerScrollSpeeds = [20, 25, 30, 35, 40]; 
+    let listenerScrollSpeedIdx = 2; // מתחיל בברירת מחדל של 30 דקות
+    
     let scrollAccumulator = 0;
     let isPausedByGragger = false; 
 
@@ -277,6 +376,21 @@
     let chapWordCounts = {};
     let totalMegillahWords = 0;
     let scrollTimeout = null;
+
+    // פונקציות בחירת המסלול בחלון הצף
+    function selectSpeed(index) {
+        listenerScrollSpeedIdx = index;
+        document.getElementById('listenerSpeedBtn').innerText = '⏱ מסלול: ' + listenerScrollSpeeds[listenerScrollSpeedIdx] + ' דק\'';
+        updateTimersDisplay();
+        closeSpeedOverlay();
+    }
+
+    function closeSpeedOverlay() {
+        document.getElementById('speedSelectionOverlay').style.display = 'none';
+        
+        // אתחול חיישני תנועה כשמשתמש לוחץ על משהו בפעם הראשונה
+        initSensorsOnFirstTouch();
+    }
 
     function initWordCounts() {
         if (typeof megillahData === 'undefined') return;
@@ -389,13 +503,11 @@
         }
 
         sensorsInitialized = true;
-        document.removeEventListener('click', initSensorsOnFirstTouch);
-        document.removeEventListener('touchstart', initSensorsOnFirstTouch);
     }
 
-    document.addEventListener('click', initSensorsOnFirstTouch);
-    document.addEventListener('touchstart', initSensorsOnFirstTouch);
-
+    // המסך מעכב את האתחול עד שהמשתמש לוחץ על בחירת מסלול בחלון
+    // במקום להתחבר אוטומטית למסמך השלם.
+    
     const graggerObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -430,6 +542,9 @@
     window.onload = () => { 
         initWordCounts(); 
         loadContent(); 
+        
+        // הצגת חלון הבחירה מיד בטעינה
+        document.getElementById('speedSelectionOverlay').style.display = 'flex';
     };
 
     function highlightKamatzKatan(text, chap, vIdx) {
@@ -493,7 +608,6 @@
             });
         }
 
-        // טעינת ברכות הסיום מהקובץ החיצוני + הוספת כותרת המניין
         if (typeof endBrachotData !== 'undefined') {
             const endBrachotDiv = document.createElement('div');
             endBrachotDiv.className = 'brachot-section';
@@ -668,7 +782,7 @@
 
     function changeListenerScrollSpeed() {
         listenerScrollSpeedIdx = (listenerScrollSpeedIdx + 1) % listenerScrollSpeeds.length;
-        document.getElementById('listenerSpeedBtn').innerText = '⏱ זמן: ' + listenerScrollSpeeds[listenerScrollSpeedIdx] + ' דק\'';
+        document.getElementById('listenerSpeedBtn').innerText = '⏱ מסלול: ' + listenerScrollSpeeds[listenerScrollSpeedIdx] + ' דק\'';
         updateTimersDisplay();
     }
 
