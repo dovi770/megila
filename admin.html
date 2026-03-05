@@ -3,34 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול - קול קורא המגילה</title>
+    <title>מערכת ניהול - קול קורא המגילה</title>
     <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- חיבור לפיירבייס -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-</head>
-<body style="background: var(--primary-color);">
+    
+    <!-- ייבוא המידע הקיים כדי שנוכל לערוך אותו -->
+    <script src="megillahData.js"></script>
 
-<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-    <div class="modal-box" id="adminBox" style="display: none;">
-        <button class="close-modal" onclick="window.location.href='index.html'">חזור לאתר</button>
-        <h3>פאנל ניהול (מחובר לענן)</h3>
-        <div class="admin-stats">
-            <!-- שונה כדי להציג מכשירים ייחודיים -->
-            <p>📱 מכשירים ייחודיים שביקרו באתר: <span id="adminUniqueVisits">טוען...</span></p>
-            <p>🎧 סך כל ההשמעות (Play): <span id="adminPlays">טוען...</span></p>
-            <button class="mini-btn" onclick="clearAdminData()" style="background: darkred; margin-top: 10px;">מחק את כל הנתונים</button>
-        </div>
+    <style>
+        body { background: #121212; color: #fff; margin: 0; padding: 0; }
         
-        <h4>הודעות ממשתמשים:</h4>
-        <ul class="data-list" id="adminMessagesList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
-            <li>טוען הודעות...</li>
-        </ul>
+        /* עיצוב מערכת הניהול */
+        .admin-layout {
+            display: none; /* יוסתר עד להתחברות */
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-        <h4>היסטוריית השמעות אחרונות:</h4>
-        <ul class="data-list" id="adminPlaysList" style="max-height: 200px; overflow-y: auto;">
-            <li>טוען היסטוריה...</li>
-        </ul>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #FFD700;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .admin-header h1 { margin: 0; color: #FFD700; font-family: 'Heebo', sans-serif; }
+
+        /* לשוניות */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Heebo', sans-serif;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .tab-btn:hover { background: rgba(255, 215, 0, 0.2); }
+        .tab-btn.active { background: #FFD700; color: #000; border-color: #FFD700; }
+
+        .tab-content { display: none; background: rgba(0,0,0,0.5); padding: 25px; border-radius: 15px; border: 1px solid #333; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s; }
+
+        /* כרטיסיות סטטיסטיקה */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .stat-card { background: linear-gradient(135deg, #2a2a2a, #1a1a1a); padding: 25px; border-radius: 15px; text-align: center; border-bottom: 3px solid #FFD700; }
+        .stat-card h3 { margin: 0 0 10px 0; color: #aaa; font-family: 'Heebo', sans-serif; }
+        .stat-card .number { font-size: 3rem; font-weight: bold; color: #FFD700; margin: 0; }
+
+        /* הודעות */
+        .message-card { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-right: 4px solid #FFD700; }
+        .message-header { display: flex; justify-content: space-between; margin-bottom: 10px; color: #aaa; font-size: 0.9rem; }
+        .message-body { font-family: 'Heebo', sans-serif; font-size: 1.1rem; }
+        .del-msg-btn { background: darkred; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        /* עורך המגילה */
+        .editor-controls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
+        select.admin-select { padding: 10px; border-radius: 8px; font-family: 'Heebo', sans-serif; font-size: 1.1rem; background: #222; color: #fff; border: 1px solid #FFD700; }
+        
+        .verse-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .verse-table th, .verse-table td { padding: 12px; border-bottom: 1px solid #444; text-align: right; }
+        .verse-table th { background: #2a2a2a; color: #FFD700; font-family: 'Heebo', sans-serif; }
+        .verse-table input[type="text"], .verse-table input[type="number"] { width: 100%; padding: 8px; border-radius: 5px; background: #111; border: 1px solid #555; color: #fff; font-family: 'Frank Ruhl Libre', serif; font-size: 1.2rem; }
+        .verse-table input[type="number"] { font-family: 'Heebo', sans-serif; width: 80px; text-align: center; }
+        
+        #exportArea { width: 100%; height: 200px; background: #000; color: #0f0; font-family: monospace; padding: 15px; border-radius: 10px; direction: ltr; margin-top: 20px; display: none; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<!-- מסך התחברות יופיע פה כחלון קופץ (Prompt) דרך JS -->
+
+<!-- מערכת הניהול המלאה -->
+<div class="admin-layout" id="adminDashboard">
+    <div class="admin-header">
+        <h1>⚙️ לוח בקרה - קול קורא המגילה</h1>
+        <div>
+            <button class="mini-btn" style="background: darkred;" onclick="window.location.href='index.html'">התנתק וחזור לאתר</button>
+        </div>
+    </div>
+
+    <!-- תפריט לשוניות -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('statsTab', this)">📊 סקירה ונתונים</button>
+        <button class="tab-btn" onclick="switchTab('messagesTab', this)">✉️ תיבת הודעות</button>
+        <button class="tab-btn" onclick="switchTab('editorTab', this)">📝 עורך המגילה והזמנים</button>
+    </div>
+
+    <!-- לשונית 1: נתונים וסטטיסטיקה -->
+    <div id="statsTab" class="tab-content active">
+        <h2>נתוני צפייה והאזנה מהענן</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>מכשירים ייחודיים שביקרו באתר</h3>
+                <p class="number" id="adminUniqueVisits">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>סך הכל פעמים שהופעל ניגון (Play)</h3>
+                <p class="number" id="adminPlays">0</p>
+            </div>
+        </div>
+        <div style="margin-top: 30px; text-align: left;">
+            <button class="mini-btn" onclick="clearAdminData()" style="background: darkred;">🗑️ איפוס נתונים (מחיקת סטטיסטיקה)</button>
+        </div>
+    </div>
+
+    <!-- לשונית 2: הודעות -->
+    <div id="messagesTab" class="tab-content">
+        <h2>הודעות ופניות ממשתמשים</h2>
+        <div id="adminMessagesList">
+            <p>טוען הודעות...</p>
+        </div>
+    </div>
+
+    <!-- לשונית 3: עורך תוכן המגילה -->
+    <div id="editorTab" class="tab-content">
+        <h2>עריכת טקסט וזמני פסוקים (מתוך קובץ megillahData)</h2>
+        
+        <div class="editor-controls">
+            <label>בחר פרק לעריכה:</label>
+            <select class="admin-select" id="chapterSelect" onchange="loadChapterEditor()">
+                <option value="1">פרק א'</option>
+                <option value="2">פרק ב'</option>
+                <option value="3">פרק ג'</option>
+                <option value="4">פרק ד'</option>
+                <option value="5">פרק ה'</option>
+                <option value="6">פרק ו'</option>
+                <option value="7">פרק ז'</option>
+                <option value="8">פרק ח'</option>
+                <option value="9">פרק ט'</option>
+                <option value="10">פרק י'</option>
+            </select>
+        </div>
+
+        <table class="verse-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">פסוק</th>
+                    <th>טקסט (תומך בניקוד)</th>
+                    <th style="width: 100px;">זמן (בשניות)</th>
+                </tr>
+            </thead>
+            <tbody id="editorTableBody">
+                <!-- יתמלא באמצעות JS -->
+            </tbody>
+        </table>
+
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button class="mini-btn" style="background: var(--accent-color); color: #000; font-size: 1.2rem;" onclick="generateExportCode()">💾 צור קובץ מעודכן לשמירה</button>
+        </div>
+
+        <div id="exportContainer" style="display: none;">
+            <h3 style="margin-top: 30px; color: #FFD700;">הוראות שמירה:</h3>
+            <p>הדפדפן אינו יכול לערוך קבצים מקומיים ישירות. העתק את כל הקוד שבתיבה השחורה למטה, והדבק אותו בתוך הקובץ <b>megillahData.js</b> שלך, במקום הקוד הקיים בו.</p>
+            <textarea id="exportArea" readonly></textarea>
+            <button class="mini-btn" onclick="copyToClipboard()" style="margin-top: 10px;">📋 העתק קוד</button>
+        </div>
     </div>
 </div>
 
@@ -49,8 +194,10 @@
         if (pass !== null) {
             const hashed = await hashString(pass);
             if (hashed === ADMIN_PASS_HASH) {
-                document.getElementById('adminBox').style.display = 'block';
-                updateAdminDashboard();
+                // התחברות מוצלחת
+                document.getElementById('adminDashboard').style.display = 'block';
+                fetchFirebaseData();
+                loadChapterEditor(); // טוען את עורך המגילה כברירת מחדל
             } else {
                 alert("סיסמה שגויה.");
                 window.location.href = 'index.html';
@@ -60,33 +207,145 @@
         }
     };
 
-    function updateAdminDashboard() {
-        // משיכת נתוני המכשירים הייחודיים במקום כניסות כלליות
-        db.ref('stats/uniqueVisitors').once('value').then(snap => {
+    // משיכת נתונים מהענן (סטטיסטיקה והודעות)
+    function fetchFirebaseData() {
+        // סטטיסטיקה
+        db.ref('stats/uniqueVisitors').on('value', snap => {
             document.getElementById('adminUniqueVisits').innerText = snap.val() || 0;
         });
-
-        db.ref('messages').once('value').then(snap => {
-            const msgList = document.getElementById('adminMessagesList'); msgList.innerHTML = '';
-            const messages =[]; snap.forEach(c => messages.push(c.val()));
-            if(messages.length === 0) msgList.innerHTML = '<li>אין הודעות חדשות.</li>';
-            else messages.reverse().forEach(m => msgList.innerHTML += `<li><strong>${m.name} (${m.date}):</strong><br>${m.text}</li>`);
+        db.ref('plays').on('value', snap => {
+            let total = 0; snap.forEach(() => { total++ });
+            document.getElementById('adminPlays').innerText = total;
         });
 
-        db.ref('plays').limitToLast(50).once('value').then(snap => {
-            const playsList = document.getElementById('adminPlaysList'); playsList.innerHTML = '';
-            const plays =[]; snap.forEach(c => plays.push(c.val()));
-            document.getElementById('adminPlays').innerText = plays.length >= 50 ? "50+" : plays.length;
-            if(plays.length === 0) playsList.innerHTML = '<li>אין נתוני השמעות כרגע.</li>';
-            else plays.reverse().forEach(p => playsList.innerHTML += `<li>תאריך: ${p.date} | פרק ${p.chapter} | שניה: ${p.time}</li>`);
+        // הודעות
+        db.ref('messages').on('value', snap => {
+            const msgList = document.getElementById('adminMessagesList'); 
+            msgList.innerHTML = '';
+            let hasMessages = false;
+
+            snap.forEach(child => {
+                hasMessages = true;
+                const key = child.key;
+                const m = child.val();
+                
+                msgList.innerHTML = `
+                    <div class="message-card">
+                        <div class="message-header">
+                            <span>מאת: <strong>${m.name}</strong></span>
+                            <span>תאריך: ${m.date}</span>
+                        </div>
+                        <div class="message-body">${m.text.replace(/\n/g, '<br>')}</div>
+                        <div style="text-align: left; margin-top: 10px;">
+                            <button class="del-msg-btn" onclick="deleteMessage('${key}')">מחק הודעה זו</button>
+                        </div>
+                    </div>
+                ` + msgList.innerHTML; // מוסיף למעלה (החדש ביותר ראשון)
+            });
+
+            if (!hasMessages) {
+                msgList.innerHTML = '<p>אין הודעות חדשות.</p>';
+            }
         });
     }
 
-    function clearAdminData() {
-        if(confirm("האם אתה בטוח שברצונך למחוק את כל הנתונים במסד הנתונים בענן? לא ניתן לשחזר פעולה זו!")) {
-            db.ref('stats').remove(); db.ref('messages').remove(); db.ref('plays').remove();
-            alert("הנתונים נמחקו מהענן בהצלחה."); updateAdminDashboard();
+    function deleteMessage(key) {
+        if(confirm('האם למחוק הודעה זו?')) {
+            db.ref('messages/' + key).remove();
         }
+    }
+
+    function clearAdminData() {
+        if(confirm("האם אתה בטוח שברצונך למחוק את כל הסטטיסטיקות? לא ניתן לשחזר!")) {
+            db.ref('stats').remove(); 
+            db.ref('plays').remove();
+            alert("הנתונים אופסו בהצלחה."); 
+        }
+    }
+
+    // --- מערכת עריכת המגילה (מתוך הזיכרון של הדפדפן) ---
+    function loadChapterEditor() {
+        if(typeof megillahData === 'undefined') {
+            document.getElementById('editorTableBody').innerHTML = '<tr><td colspan="3">שגיאה: הקובץ megillahData.js לא נטען.</td></tr>';
+            return;
+        }
+
+        const chapter = document.getElementById('chapterSelect').value;
+        const data = megillahData[chapter];
+        const tbody = document.getElementById('editorTableBody');
+        tbody.innerHTML = '';
+
+        if(!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3">אין נתונים לפרק זה.</td></tr>';
+            return;
+        }
+
+        data.forEach((pasuk, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight: bold; color: #888;">${index + 1}</td>
+                <td><input type="text" id="text_${chapter}_${index}" value="${pasuk.t.replace(/"/g, '&quot;')}" onchange="updateDataMemory(${chapter}, ${index}, 't')"></td>
+                <td><input type="number" id="time_${chapter}_${index}" value="${pasuk.time}" onchange="updateDataMemory(${chapter}, ${index}, 'time')"></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // כשמקלידים בטבלה - מעדכן את האובייקט בזיכרון של הדפדפן
+    function updateDataMemory(chapter, index, field) {
+        const inputId = `${field}_${chapter}_${index}`;
+        let newVal = document.getElementById(inputId).value;
+        
+        if(field === 'time') {
+            megillahData[chapter][index][field] = parseInt(newVal) || 0;
+        } else {
+            megillahData[chapter][index][field] = newVal;
+        }
+    }
+
+    // מחולל את הקוד מחדש כטקסט שמיועד להעתקה
+    function generateExportCode() {
+        let output = 'const megillahData = {\n';
+        
+        for (let c = 1; c <= 10; c++) {
+            if (!megillahData[c]) continue;
+            output += `    ${c}:[\n`;
+            
+            megillahData[c].forEach((p, idx) => {
+                let isLast = idx === megillahData[c].length - 1;
+                // מונע בעיה אם המשתמש הקליד גרשיים בטקסט
+                let safeText = p.t.replace(/"/g, '\\"');
+                output += `        { t: "${safeText}", time: ${p.time} }${isLast ? '' : ','}\n`;
+            });
+            
+            output += `    ]${c === 10 ? '' : ','}\n`;
+        }
+        
+        output += '};\n';
+        
+        const exportArea = document.getElementById('exportArea');
+        exportArea.value = output;
+        document.getElementById('exportContainer').style.display = 'block';
+        
+        // גלול למטה כדי שהמשתמש יראה את הקוד
+        exportArea.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function copyToClipboard() {
+        const copyText = document.getElementById("exportArea");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // למובייל
+        document.execCommand("copy");
+        alert("הקוד הועתק! עכשיו פתח את הקובץ megillahData.js, תמחק את מה שיש בו, והדבק את הקוד הזה.");
+    }
+
+    // מעבר בין הלשוניות
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        btnElement.classList.add('active');
     }
 </script>
 </body>
