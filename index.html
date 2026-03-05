@@ -8,6 +8,51 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        /* הגדרת האנימציות */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* החלת האנימציות על האלמנטים */
+        #welcomeOverlay {
+            animation: fadeIn 1s ease-out;
+        }
+
+        #welcomeOverlay h1 {
+            animation: slideDown 0.8s ease-out backwards;
+        }
+
+        #welcomeOverlay p {
+            animation: slideDown 0.8s ease-out 0.3s backwards;
+        }
+
+        #welcomeOverlay .welcome-btn {
+            animation: slideUp 0.8s ease-out 0.6s backwards;
+            transition: transform 0.2s, box-shadow 0.2s; /* שומר על אנימציית מעבר חלקה במעבר עכבר */
+        }
+
+        #welcomeOverlay .welcome-btn.secondary {
+            animation: slideUp 0.8s ease-out 0.8s backwards;
+        }
+        
+        /* אפקט הוספה בעת מעבר עכבר על הכפתורים */
+        #welcomeOverlay .welcome-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body style="padding-bottom: 0;">
 
