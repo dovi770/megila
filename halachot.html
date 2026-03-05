@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>הלכות ומנהגי קריאת המגילה - קול קורא המגילה</title>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            background: #121212;
+            color: #fff;
+        }
+
+        .header-actions .mini-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+        }
+
+        @media(min-width: 800px) {
+            .main-container {
+                flex-direction: row;
+            }
+            .halachot-content { flex: 1.5; }
+            .ai-chat-section { flex: 1; position: sticky; top: 20px; height: calc(100vh - 40px); }
+        }
+
+        /* עיצוב טקסט ההלכות */
+        .brachot-section {
+            margin-bottom: 25px;
+            padding: 25px 30px;
+            background: #fdf8eb;
+            border-radius: 15px;
+            border: 2px solid #d4af37;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 1s ease-out;
+        }
+
+        .brachot-title {
+            text-align: center;
+            color: #4a2e15;
+            font-size: 1.5rem;
+            font-family: 'Heebo', sans-serif;
+            font-weight: 700;
+            margin: 0 auto 20px auto;
+            padding: 8px 25px;
+            background: rgba(212, 175, 55, 0.15);
+            border-radius: 30px;
+            display: table;
+            border: 1px solid #d4af37;
+        }
+
+        .halachot-list {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-size: 1.2rem;
+            color: #1a1a1a;
+            line-height: 1.8;
+            padding-right: 20px;
+        }
+
+        .halachot-list li {
+            margin-bottom: 15px;
+            padding-right: 10px;
+        }
+
+        .halachot-list li::marker {
+            color: #d4af37;
+            font-weight: bold;
+        }
+
+        /* עיצוב חלון הצ'אט AI */
+        .chat-container {
+            background: #1e1e1e;
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            max-height: 80vh;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out backwards;
+        }
+
+        .chat-header {
+            background: linear-gradient(to right, #FFD700, #FFA500);
+            color: #000;
+            padding: 15px;
+            text-align: center;
+            font-family: 'Heebo', sans-serif;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-family: 'Heebo', sans-serif;
+            font-size: 1rem;
+            line-height: 1.4;
+            animation: fadeIn 0.3s;
+        }
+
+        .msg-ai {
+            background: #2a2a2a;
+            color: #fff;
+            align-self: flex-start;
+            border-bottom-right-radius: 5px;
+            border: 1px solid #444;
+        }
+
+        .msg-user {
+            background: rgba(255, 215, 0, 0.2);
+            color: #FFD700;
+            align-self: flex-end;
+            border-bottom-left-radius: 5px;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            gap: 10px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 25px;
+            border: 1px solid #555;
+            background: #111;
+            color: #fff;
+            font-family: 'Heebo', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .chat-input-area input:focus {
+            border-color: #FFD700;
+        }
+
+        .chat-input-area button {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 0 20px;
+            border-radius: 25px;
+            font-family: 'Heebo', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .chat-input-area button:hover {
+            transform: scale(1.05);
+        }
+
+        /* אנימציה להקלדה */
+        .typing-indicator {
+            display: none;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            font-family: 'Heebo';
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-text">
+        <h1 onclick="window.location.href='index.html'">קול קורא המגילה</h1>
+        <h2>הלכות ומנהגי חב"ד לקריאת המגילה</h2>
+    </div>
+    <div class="header-actions">
+        <button class="mini-btn" onclick="window.location.href='index.html'">🏠 חזור לאתר</button>
+    </div>
+</header>
+
+<div class="main-container">
+    <!-- אזור טקסט ההלכות -->
+    <div class="halachot-content">
+        <div class="brachot-section">
+            <h2 class="brachot-title">הלכות קריאת המגילה (מנהגי חב"ד)</h2>
+            <ul class="halachot-list">
+                <li>מי שטרם נתן 'מחצית השקל' כנהוג, יתננה עתה לפני קריאת המגילה.</li>
+                <li>במגילה שכתב אדמו"ר מהר"ש נ"ע: א) לא כל העמודים מתחילים בתיבת 'המלך'. ב) עשרת בני המן אינם בעמוד בפני עצמו.</li>
+                <li><strong>אין מקום לשמיעת קריאת מגילה על-ידי רמקול, טלפון, רדיו וכיוצא-בהם (גם לא בשידור חי)</strong> – כי אין זה קול אדם כלל.</li>
+                <li>הרבי היה שומע את המגילה מעומד. בשעת הקריאה עומדים מימינו ומשמאלו של הבעל-קורא.</li>
+                <li>הבעל-קורא וגם השומעים כופלים אותה כאיגרת (הכפילה היא לשלושה חלקים). הרבי הקפיד שהמגילה תישאר 'כאיגרת' עד סיום הקריאה. אחר הקריאה כורכים את המגילה.</li>
+                <li>הרבי היה מברך את הברכות לפניה ולאחריה עם הבעל-קורא, הן בלילה והן ביום.</li>
+                <li>הבעל-קורא יכוון להוציא ידי-חובה את כל השומעים והם יכוונו לצאת. <strong>אסור להפסיק עד לאחר ברכת "הרב את ריבנו"</strong>.</li>
+                <li>מי שלא הצליח לשמוע תיבה או פסוק, יקרא זאת מיד בעצמו (עדיף מתוך חומש או מגילה מנוקדת) עד מקום שהקורא אוחז בו, כדי שלא יצטרך לחפש קריאה אחרת.</li>
+                <li>מכים 'המן' בכל פעם שנזכר 'המן' בתואר כלשהו (כגון: 'האגגי', 'הרע').</li>
+                <li>בקריאה קוראים כשתי המסורות: "להרוג ולאבד / ולהרוג ולאבד"; "ואיש לא עמד בפניהם / ואיש לא עמד לפניהם".</li>
+                <li>הציבור אומר ארבעה פסוקים בקול רם: 'איש יהודי', 'ומרדכי יצא', 'ליהודים', 'כי מרדכי'. והבעל-קורא חוזר וקורא אותם.</li>
+                <li>את <strong>עשרת בני המן</strong> צריך לקרוא בנשימה אחת. הציבור קורא אותם תחילה, והתינוקות מכין אז (ולא כשהבעל-קורא קורא אותם).</li>
+                <li>מנענעים את המגילה באמירת "האיגרת הזאת" ו-"איגרת הפורים הזאת השנית".</li>
+                <li>אחר הקריאה מברך "הרב את ריבנו". נוסח 'שושנת יעקב': "ארורים כל הרשעים, ברוכים כל הצדיקים".</li>
+                <li>הקורא לנשים בלבד – מברכות לעצמן (מעומד). הרמ"א פסק שאין לברך אחר קריאת המגילה אלא בציבור (אבל האדמו"ר מברך גם ביחיד).</li>
+                <li>בלילה: ישמח וירבה קצת בסעודה. אומר 'ועל הניסים'. אם שכח ולא חתם ברכה אינו חוזר, ואומר ב'הרחמן'.</li>
+                <li>בשחרית (יום): שמיעת וקריאת המגילה נערכת <strong>בתפילין דרש"י</strong>. מברכים שוב שלוש ברכות, כולל "שהחיינו", ויש לכוון גם על מצוות היום (משלוח מנות, מתנות לאביונים וסעודה).</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- אזור הצ'אט -->
+    <div class="ai-chat-section">
+        <div class="chat-container">
+            <div class="chat-header">
+                🤖 עוזר הלכתי חכם (AI)
+            </div>
+            <div class="chat-box" id="chatBox">
+                <div class="message msg-ai">
+                    שלום! אני עוזר ה-AI של "קול קורא המגילה".<br>
+                    ניתן לשאול אותי כל שאלה לגבי הלכות קריאת המגילה (על פי מנהגי חב"ד המופיעים כאן).<br>
+                    <strong>לדוגמה:</strong> "האם מותר לשמוע דרך רמקול?" או "איך קוראים את עשרת בני המן?"
+                </div>
+            </div>
+            <div class="typing-indicator" id="typingIndicator">העוזר מקליד תשובה...</div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="הקלד שאלתך כאן..." onkeypress="handleEnter(event)">
+                <button onclick="sendMessage()">שלח</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- מנוע ה-AI המקומי (מבוסס מילות מפתח מתוך ההלכות) ---
+    const knowledgeBase = [
+        {
+            keywords: ["רמקול", "טלפון", "רדיו", "זום", "שידור חי", "מיקרופון", "לשמוע מרחוק"],
+            answer: "על פי ההלכה: אין מקום לשמיעת קריאת מגילה על-ידי רמקול, טלפון, רדיו או שידור חי וכיוצא בהם. הסיבה לכך היא ש'אין זה קול אדם כלל', ולכן לא יוצאים בזה ידי חובה."
+        },
+        {
+            keywords: ["מחצית השקל", "שקל", "כסף", "תרומה"],
+            answer: "מי שטרם נתן 'מחצית השקל' כנהוג בתענית אסתר, יתננה עתה לפני קריאת המגילה בלילה."
+        },
+        {
+            keywords: ["לעמוד", "לשבת", "עמידה", "מעומד", "ישיבה"],
+            answer: "מנהג הרבי היה לשמוע את קריאת המגילה כשהוא עומד (מעומד). כמו כן, בשעת הקריאה עומדים שני אנשים - אחד מימינו ואחד משמאלו של הבעל-קורא."
+        },
+        {
+            keywords: ["איגרת", "לקפל", "לכפול", "שלושה חלקים", "שלוש", "קיפול"],
+            answer: "הבעל קורא וגם השומעים צריכים לכפול את המגילה כ'איגרת', כלומר לקפל אותה לשלושה חלקים. הרבי הקפיד שהמגילה תישאר מקופלת כאיגרת עד סיום הקריאה, ורק אחר כך כורכים אותה חזרה."
+        },
+        {
+            keywords: ["פספס", "חסר", "לא שמע", "פסוק", "תיבה", "מילה"],
+            answer: "מי שלא הצליח לשמוע מילה או פסוק, חייב לקרוא זאת מיד בעצמו. עדיף לקרוא מתוך חומש או מגילה מנוקדת (כדי לא לטעות), ועליו להשלים מיד את הקריאה עד למקום שהבעל קורא אוחז בו, כדי שלא יפסיד את הרצף."
+        },
+        {
+            keywords: ["המן", "להכות", "רעשן", "להרעיש", "תינוקות", "ילדים"],
+            answer: "מכים ברעשן בכל פעם שהשם 'המן' נזכר יחד עם תואר כלשהו (כמו 'האגגי' או 'הרע'). שימו לב: בעשרת בני המן הילדים צריכים להרעיש כאשר הציבור קורא אותם, ולא כשהבעל קורא אומר אותם!"
+        },
+        {
+            keywords: ["כפול", "להרוג ולאבד", "בפניהם"],
+            answer: "בקריאה נהוג לקרוא את המילים הללו בשתי המסורות ברצף: פעם אחת 'להרוג ולְאבד' ומיד 'להרוג ולְאַבד'. וכן בפסוק נוסף: 'ואיש לא עמד בּפניהם' ומיד 'ואיש לא עמד לִפניהם'."
+        },
+        {
+            keywords: ["ארבעה פסוקים", "בקול רם", "איש יהודי"],
+            answer: "נוהגים שהציבור אומר בקול רם 4 פסוקים: 'איש יהודי', 'ומרדכי יצא', 'ליהודים', 'כי מרדכי'. הבעל-קורא ממתין, ואז חוזר וקורא אותם בעצמו מתוך המגילה הכשרה."
+        },
+        {
+            keywords: ["עשרת בני המן", "נשימה אחת", "חמש מאות"],
+            answer: "את עשרת בני המן חובה לקרוא בנשימה אחת. הרצף מתחיל מהמילים 'חמש מאות איש' ומסתיים לאחר המילה 'עשרת'. הציבור קורא זאת תחילה (ואז הילדים מרעישים), ולאחר מכן הבעל-קורא קורא זאת בנשימה אחת."
+        },
+        {
+            keywords: ["לנענע", "נענוע"],
+            answer: "מנענעים את המגילה בידיים פעמיים במהלך הקריאה: כאשר הבעל קורא אומר 'האיגרת הזאת', וכאשר הוא אומר 'איגרת הפורים הזאת השנית'."
+        },
+        {
+            keywords: ["נשים", "ברכה לנשים"],
+            answer: "כאשר קוראים לנשים בלבד, כל אישה מברכת לעצמה (בעמידה). אם הן לא יכולות, הבעל קורא יברך עבורן."
+        },
+        {
+            keywords: ["הרמ\"א", "אחרי הקריאה", "ברכה אחרונה", "ביחיד"],
+            answer: "הרמ\"א פסק שאת הברכה שאחרי המגילה ('הרב את ריבנו') מברכים רק אם יש מניין ציבור. עם זאת, מנהג האדמו\"ר היה לברך ברכה אחרונה גם כאשר קרא ביחידות."
+        },
+        {
+            keywords: ["שושנת יעקב", "שושנת", "ארורים"],
+            answer: "נוסח 'שושנת יעקב' בחב\"ד מסתיים במילים: 'ארורים כל הרשעים, ברוכים כל הצדיקים'."
+        },
+        {
+            keywords: ["בבוקר", "שחרית", "תפילין", "שהחיינו", "מצוות היום"],
+            answer: "קריאת המגילה בבוקר (שחרית) נעשית כאשר לובשים תפילין (של רש\"י). מברכים שוב את 3 הברכות (כולל 'שהחיינו'), ובזמן ברכת 'שהחיינו' בבוקר יש לכוון גם על מצוות משלוח מנות, מתנות לאביונים וסעודת פורים."
+        },
+        {
+            keywords: ["הפסקה", "לדבר", "דיבור"],
+            answer: "אסור בשום אופן להפסיק בדיבור מרגע הברכות שלפני המגילה, ועד שהש\"ץ מסיים לומר את הברכה האחרונה ('הרב את ריבנו')."
+        },
+        {
+            keywords: ["על הניסים", "סעודה", "בלילה", "שכח"],
+            answer: "גם בלילה מצווה לשמוח ולהרבות קצת בסעודה. מוסיפים 'ועל הניסים' בברכת המזון. מי ששכח, אם כבר אמר את שם השם בסוף הברכה אינו חוזר, אלא יוסיף ב'הרחמן' את הנוסח: 'הרחמן הוא יעשה לנו ניסים... בימי מרדכי'."
+        }
+    ];
+
+    // הוספת הודעה למסך
+    function appendMessage(text, sender) {
+        const chatBox = document.getElementById('chatBox');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender === 'user' ? 'msg-user' : 'msg-ai'}`;
+        msgDiv.innerHTML = text;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // בדיקת לחיצה על אנטר
+    function handleEnter(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    // פענוח השאלה ושליחת התשובה
+    function sendMessage() {
+        const inputField = document.getElementById('chatInput');
+        const question = inputField.value.trim();
+        if (!question) return;
+
+        // הוספת שאלת המשתמש למסך
+        appendMessage(question, 'user');
+        inputField.value = '';
+
+        // הצגת אנימציית הקלדה
+        const typingInd = document.getElementById('typingIndicator');
+        typingInd.style.display = 'block';
+        
+        // גלילה למטה
+        const chatBox = document.getElementById('chatBox');
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // השהייה קלה כדי לדמות "חשיבה" של AI
+        setTimeout(() => {
+            typingInd.style.display = 'none';
+            let foundAnswer = null;
+
+            // חיפוש חכם במאגר
+            for (let item of knowledgeBase) {
+                for (let keyword of item.keywords) {
+                    if (question.includes(keyword)) {
+                        foundAnswer = item.answer;
+                        break;
+                    }
+                }
+                if (foundAnswer) break;
+            }
+
+            // תשובת ברירת מחדל אם לא נמצאה התאמה
+            if (!foundAnswer) {
+                foundAnswer = "סליחה, לא זיהיתי בשאלתך מילות מפתח מתוך ההלכות שבעמוד זה. אנא נסה לנסח את השאלה אחרת, או חפש מילה ספציפית (למשל: 'רדיו', 'שהחיינו', 'עשרת בני המן', 'נשים' וכד').";
+            }
+
+            appendMessage(foundAnswer, 'ai');
+        }, 800 + Math.random() * 700); // השהייה אקראית בין 0.8 ל-1.5 שניות
+    }
+</script>
+
+</body>
+</html>
