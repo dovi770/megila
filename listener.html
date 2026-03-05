@@ -94,7 +94,7 @@
     }
     .toast-notification.show { opacity: 1; }
 
-/* === עיצוב כותרות הפרקים (נשארות על הרקע הכהה) === */
+    /* === עיצוב כותרות הפרקים (נשארות על הרקע הכהה) === */
     .chapter-heading {
         text-align: center;
         color: #FFD700;
@@ -114,22 +114,22 @@
     .brachot-section {
         margin-bottom: 45px;
         padding: 25px 20px;
-        background: #fdf8eb; /* צבע קרם/קלף בהיר ונעים לעין */
+        background: #fdf8eb; 
         border-radius: 15px;
-        border: 2px solid #d4af37; /* מסגרת זהב כהה שתתאים לרקע הבהיר */
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); /* צל כדי להבליט את זה מהרקע הכהה של האתר */
+        border: 2px solid #d4af37; 
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); 
     }
 
     /* עיצוב כותרת הברכות (מותאם לרקע הבהיר) */
     .brachot-title {
         text-align: center;
-        color: #4a2e15; /* חום כהה כדי שיבלוט על הרקע הבהיר */
+        color: #4a2e15; 
         font-size: 1.2rem; 
         font-family: 'Heebo', sans-serif;
         font-weight: 700;
         margin: 0 auto 20px auto;
         padding: 5px 20px;
-        background: rgba(212, 175, 55, 0.15); /* רקע זהב עדין לכותרת */
+        background: rgba(212, 175, 55, 0.15); 
         border-radius: 30px;
         display: table;
         border: 1px solid #d4af37;
@@ -142,13 +142,25 @@
         line-height: 1.6;
         font-family: 'Frank Ruhl Libre', serif;
         font-size: 0.65em; 
-        color: #1a1a1a; /* טקסט כהה (כמעט שחור) לקריאה נוחה על הרקע הבהיר */
-        font-weight: 700; /* הדגשה קלה כדי שייראה ברור בגודל הקטן */
+        color: #1a1a1a; 
+        font-weight: 700; 
     }
 
     .brachot-text p {
         margin-top: 0;
         margin-bottom: 15px;
+    }
+
+    /* עיצוב לחצן גלילה מרכזי וגדול */
+    .play-pause-btn {
+        font-size: 1.05rem;
+        padding: 8px 25px;
+        border-radius: 30px;
+        font-family: 'Heebo', sans-serif;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        cursor: pointer;
     }
 
     /* === הנפשות חדשות === */
@@ -160,14 +172,9 @@
         from { opacity: 0; transform: translateY(-20px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
     
     header { animation: slideDown 0.8s ease-out; }
     .tikkun-wrapper { animation: fadeIn 1s ease-out 0.3s backwards; }
-    .bottom-player-bar { animation: slideUp 0.8s ease-out 0.6s backwards; }
 </style>
 </head>
 <body>
@@ -197,11 +204,18 @@
         <div id="progressBarFill" style="position: absolute; top: 0; right: 0; height: 100%; width: 0%; background: linear-gradient(to left, #FFD700, #FFA500); box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); transition: width 0.3s ease;"></div>
     </div>
     
-    <div class="player-content">
+    <div class="player-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <div style="display:flex; gap:8px; flex:1;">
-            <button class="mini-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()">▶ גלילה אוטומטית</button>
-            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">⏱ זמן: 25 דק'</button>
+            <button class="mini-btn" id="listenerSpeedBtn" onclick="changeListenerScrollSpeed()">⏱ זמן: 20 דק'</button>
         </div>
+        
+        <div style="display:flex; flex-direction: column; align-items: center; flex:1.5; justify-content: center;">
+            <button class="play-pause-btn" id="listenerScrollToggleBtn" onclick="toggleListenerScroll()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">▶ גלילה אוטומטית</button>
+            <div id="scrollTimers" style="font-size: 0.8rem; font-family: 'Heebo', sans-serif; color: #fff; margin-top: 5px; display: none; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                <span id="timeElapsedStr">00:00</span> / <span id="timeRemainingStr">-20:00</span>
+            </div>
+        </div>
+
         <div style="display:flex; gap:8px; flex:1; justify-content: flex-end;">
             <button class="mini-btn" onclick="changeFontSize(1)">A+</button>
             <button class="mini-btn" onclick="changeFontSize(-1)">A-</button>
@@ -235,7 +249,7 @@
 
 <!-- קבצים חיצוניים -->
 <script src="firebase-setup.js?v=5"></script>
-<script src="brachotData.js?v=1"></script> <!-- קובץ הברכות החדש -->
+<script src="brachotData.js?v=2"></script> <!-- קובץ הברכות - יש להוסיף שם את endBrachotData -->
 <script src="megillahData.js?v=5"></script>
 <script src="megillahDataNoNikkud.js?v=5"></script>
 
@@ -244,28 +258,26 @@
     let listenerAutoScrollInterval = null; 
     let isListenerScrolling = false; 
     let listenerScrollSpeedIdx = 0;
-    const listenerScrollSpeeds = [25, 30, 35, 40]; // משך גלילה בדקות לכל המגילה
+    const listenerScrollSpeeds = [20, 25, 30, 35, 40]; // משך גלילה בדקות לכל המגילה
     let scrollAccumulator = 0;
-    let isPausedByGragger = false; // משתנה לעצירת הגלילה בזמן רעשן
+    let isPausedByGragger = false; 
 
     // === הגדרות מערכת השמע של הרעשן ===
     const graggerAudio = new Audio('gragger.mp3'); 
     graggerAudio.preload = 'auto'; 
     graggerAudio.loop = true; 
 
-    // משתנים למעקב אוטומטי אחר הרעשנים במסך
     let isGraggerAllowed = false; 
     let activeGraggersOnScreen = 0;
     let sensorsInitialized = false;
     let lastAccX = null, lastAccY = null, lastAccZ = null;
     let shakeStopTimeout = null; 
 
-    // === משתנים לחישוב התקדמות קריאה (פס חזותי בלבד) ===
+    // === משתנים לחישוב התקדמות קריאה ===
     let chapWordCounts = {};
     let totalMegillahWords = 0;
     let scrollTimeout = null;
 
-    // ספירת כל המילים במגילה בטעינה ראשונית (מאחורי הקלעים)
     function initWordCounts() {
         if (typeof megillahData === 'undefined') return;
         totalMegillahWords = 0;
@@ -284,7 +296,6 @@
         }
     }
 
-    // מציאת הפסוק שכרגע על המסך (מותאם לרצף מלא)
     function getActivePasuk() {
         let pesukim = document.querySelectorAll('.pasuk');
         if (pesukim.length === 0) return {c: 1, idx: 0};
@@ -304,7 +315,6 @@
         };
     }
 
-    // מחשב כמה מילים נקראו במצטבר (מותאם לרצף מלא)
     function getCurrentWordsRead(active) {
         let read = 0;
         for (let c = 1; c < active.c; c++) {
@@ -320,31 +330,47 @@
         return read;
     }
 
-    // מעדכן אך ורק את אורך הפס העיצובי
     function updateProgress() {
         if (totalMegillahWords === 0) return;
-        
         let active = getActivePasuk();
         let currentWords = getCurrentWordsRead(active);
         let percent = (currentWords / totalMegillahWords) * 100;
-        
-        // מוודא שהאחוזים לא עפים מעל 100
         percent = Math.min(100, Math.max(0, percent));
-        
         document.getElementById('progressBarFill').style.width = percent + '%';
     }
 
-    // מאזין לגלילה כדי לקדם את הפס בצורה חלקה
+    // פונקציה לעדכון טקסט הטיימרים לפי מיקום הגלילה
+    function updateTimersDisplay() {
+        if (!isListenerScrolling && document.getElementById('scrollTimers').style.display === 'none') return;
+        
+        let scrollable = Math.max(0, document.body.scrollHeight - window.innerHeight);
+        if (scrollable === 0) return;
+        
+        let percentage = Math.min(1, Math.max(0, window.scrollY / scrollable));
+        let totalSecs = listenerScrollSpeeds[listenerScrollSpeedIdx] * 60;
+        let elapsedSecs = Math.floor(totalSecs * percentage);
+        let remainingSecs = Math.max(0, totalSecs - elapsedSecs);
+        
+        function formatTime(s) {
+            let m = Math.floor(s / 60);
+            let sec = s % 60;
+            return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+        
+        document.getElementById('timeElapsedStr').innerText = formatTime(elapsedSecs);
+        document.getElementById('timeRemainingStr').innerText = "-" + formatTime(remainingSecs);
+    }
+
+    // מאזין לגלילה כדי לקדם את הפס ואת הטיימרים
     window.addEventListener('scroll', () => {
         if (!scrollTimeout) {
             scrollTimeout = setTimeout(() => {
                 updateProgress();
+                updateTimersDisplay();
                 scrollTimeout = null;
-            }, 100); 
+            }, 50); 
         }
     });
-
-    // === סוף קוד התקדמות ===
 
     function initSensorsOnFirstTouch() {
         if (sensorsInitialized) return;
@@ -432,7 +458,6 @@
         area.innerHTML = '';
         area.style.fontSize = (currentFontSize + 0.15) + 'rem';
 
-        // הוספת הברכות בהתחלה (נשאבות מהקובץ החיצוני)
         if (typeof brachotData !== 'undefined') {
             const brachotDiv = document.createElement('div');
             brachotDiv.className = 'brachot-section';
@@ -442,22 +467,19 @@
 
         const letters = ["", "א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ז'", "ח'", "ט'", "י'"];
 
-        // לולאה שעוברת על כל עשרת הפרקים ומדפיסה אותם ברצף
         for (let c = 1; c <= 10; c++) {
             const dataWithNikkud = megillahData[c] || [];
             if (dataWithNikkud.length === 0) continue;
 
-            // יצירת כותרת יפה לכל פרק
             const heading = document.createElement('h2');
             heading.className = 'chapter-heading';
             heading.innerText = `פרק ${letters[c]}`;
             area.appendChild(heading);
 
-            // הדפסת הפסוקים של אותו פרק
             dataWithNikkud.forEach((item, idx) => {
                 const span = document.createElement('span'); 
                 span.className = 'pasuk';
-                span.dataset.chapter = c; // תגית שעוזרת למדוד את ההתקדמות ברצף
+                span.dataset.chapter = c; 
                 span.dataset.index = idx; 
                 
                 let textWithNikkud = highlightKamatzKatan(item.t, c, idx);
@@ -471,18 +493,18 @@
             });
         }
 
-        // הוספת הברכות שלאחר הקריאה בסוף העמוד
-        const endBrachotDiv = document.createElement('div');
-        endBrachotDiv.className = 'brachot-section';
-        endBrachotDiv.style.marginTop = '40px';
-        endBrachotDiv.innerHTML = `
-            <h2 class="brachot-title">ברכות לאחר קריאת המגילה</h2>
-            <div class="brachot-text">
-                <p>בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, הָרָב אֶת רִיבֵנוּ וְהַדָּן אֶת דִּינֵנוּ וְהַנּוֹקֵם אֶת נִקְמָתֵנוּ, וְהַמְשַׁלֵּם גְּמוּל לְכָל אוֹיְבֵי נַפְשֵׁנוּ וְהַנִּפְרָע לָנוּ מִצָּרֵינוּ. בָּרוּךְ אַתָּה יְהֹוָה, הַנִּפְרָע לְעַמּוֹ יִשְׂרָאֵל מִכָּל צָרֵיהֶם, הָאֵל הַמּוֹשִׁיעַ.</p>
-                <p>שׁוֹשַׁנַּת יַעֲקֹב צָהֲלָה וְשָׂמֵחָה, בִּרְאוֹתָם יַחַד תְּכֵלֶת מָרְדְּכָי. תְּשׁוּעָתָם הָיִיתָ לָנֶצַח, וְתִקְוָתָם בְּכָל דּוֹר וָדוֹר. לְהוֹדִיעַ שֶׁכָּל קֹוֶיךָ לֹא יֵבֹשׁוּ, וְלֹא יִכָּלְמוּ לָנֶצַח כָּל הַחוֹסִים בָּךְ. אָרוּר הָמָן אֲשֶׁר בִּקֵּשׁ לְאַבְּדִי, בָּרוּךְ מָרְדְּכַי הַיְּהוּדִי. אֲרוּרָה זֶרֶשׁ אֵשֶׁת מַפְחִידִי, בְּרוּכָה אֶסְתֵּר בַּעֲדִי. אֲרוּרִים כָּל הָרְשָׁעִים, בְּרוּכִים כָּל הַצַּדִּיקִים. וְגַם חַרְבוֹנָה זָכוּר לַטּוֹב.</p>
-            </div>
-        `;
-        area.appendChild(endBrachotDiv);
+        // טעינת ברכות הסיום מהקובץ החיצוני + הוספת כותרת המניין
+        if (typeof endBrachotData !== 'undefined') {
+            const endBrachotDiv = document.createElement('div');
+            endBrachotDiv.className = 'brachot-section';
+            endBrachotDiv.style.marginTop = '40px';
+            endBrachotDiv.innerHTML = `
+                <h2 class="brachot-title">ברכות לאחר קריאת המגילה</h2>
+                <div style="text-align:center; font-family:'Heebo', sans-serif; font-size:0.85rem; color:#4a2e15; margin-top:-10px; margin-bottom:15px; font-weight: bold;">(מברכים ברכות אלו רק כשיש מניין ששמע את קריאת המגילה)</div>
+                <div class="brachot-text">${endBrachotData}</div>
+            `;
+            area.appendChild(endBrachotDiv);
+        }
 
         setTimeout(() => {
             document.querySelectorAll('.gragger-icon').forEach(el => {
@@ -512,7 +534,6 @@
     }
 
     function startGraggerEffect() {
-        // אם הגלילה פעילה - עוצר אותה באופן זמני בגלל הרעשן
         if (isListenerScrolling && !isPausedByGragger) {
             isPausedByGragger = true;
         }
@@ -537,7 +558,6 @@
     }
 
     function stopGraggerEffect() {
-        // מחזיר את הגלילה אם נעצרה בגלל הרעשן
         if (isPausedByGragger) {
             isPausedByGragger = false;
         }
@@ -566,7 +586,6 @@
         clearTimeout(toastTimeout);
     }
 
-    // טעינת התוכן הכולל במקום פרק בודד
     function loadContent() {
         if (isListenerScrolling) toggleListenerScroll(false);
         
@@ -594,7 +613,6 @@
         setTimeout(updateProgress, 100); 
     }
 
-    // פונקציית הגלילה החדשה מבוססת זמן מדויק
     function toggleListenerScroll(forceState) {
         if (forceState !== undefined) {
             isListenerScrolling = forceState;
@@ -603,15 +621,18 @@
         }
         
         const btn = document.getElementById('listenerScrollToggleBtn');
+        const timerDiv = document.getElementById('scrollTimers');
         
         if (isListenerScrolling) {
             btn.style.background = "var(--accent-color)"; 
-            btn.style.color = "var(--primary-color)"; 
+            btn.style.color = "#000"; 
+            btn.style.border = "none";
             btn.innerHTML = "⏸ עצור גלילה";
+            timerDiv.style.display = "block";
+            updateTimersDisplay();
             
             if (!listenerAutoScrollInterval) {
                 listenerAutoScrollInterval = setInterval(() => {
-                    // אם הרעשן פועל עכשיו, המערכת מדלגת על הגלילה
                     if (isPausedByGragger) return; 
                     
                     const durationMins = listenerScrollSpeeds[listenerScrollSpeedIdx];
@@ -637,7 +658,9 @@
         } else {
             btn.style.background = "rgba(255,255,255,0.1)"; 
             btn.style.color = "white"; 
+            btn.style.border = "1px solid rgba(255,255,255,0.3)";
             btn.innerHTML = "▶ גלילה אוטומטית";
+            timerDiv.style.display = "none";
             clearInterval(listenerAutoScrollInterval);
             listenerAutoScrollInterval = null;
         }
@@ -646,6 +669,7 @@
     function changeListenerScrollSpeed() {
         listenerScrollSpeedIdx = (listenerScrollSpeedIdx + 1) % listenerScrollSpeeds.length;
         document.getElementById('listenerSpeedBtn').innerText = '⏱ זמן: ' + listenerScrollSpeeds[listenerScrollSpeedIdx] + ' דק\'';
+        updateTimersDisplay();
     }
 
     function openContactModal() { document.getElementById('contactModal').style.display = 'flex'; }
