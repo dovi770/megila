@@ -1,5 +1,3 @@
---- START OF FILE Paste March 08, 2026 - 3:55PM ---
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -19,6 +17,7 @@
         /* === עיצוב הרעשן הענק שקופץ באמצע המסך === */
         .big-gragger-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.15s ease-out; }
         .big-gragger-overlay.show { opacity: 1; }
+        .big-gragger-icon { width: 250px; height: 250px; filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.5)); }
         .big-gragger-icon.spinning { animation: shake-big-gragger 0.15s infinite alternate ease-in-out; }
         @keyframes shake-big-gragger { 0% { transform: scale(1) rotate(-35deg); } 100% { transform: scale(1.1) rotate(35deg); } }
         
@@ -31,76 +30,6 @@
         .brachot-title { text-align: center; color: #4a2e15; font-size: 1.2rem; font-family: 'Heebo', sans-serif; font-weight: 700; margin: 0 auto 20px auto; padding: 5px 20px; background: rgba(212, 175, 55, 0.15); border-radius: 30px; display: table; border: 1px solid #d4af37; }
         .brachot-text { text-align: justify; text-justify: inter-word; line-height: 1.6; font-family: 'Frank Ruhl Libre', serif; font-size: 0.65em; color: #1a1a1a; font-weight: 700; }
         .brachot-text p { margin-top: 0; margin-bottom: 15px; }
-
-        /* --- תוספות CSS חדשות ומעודכנות ליישור וטיפול במעברי שורה --- */
-        .text-content {
-            text-align: justify;
-            line-height: 1.8; /* מרווח שורות נוח לקריאה */
-            word-break: break-word; /* מאפשר למילים ארוכות להיחתך ולעבור שורה */
-            direction: rtl; /* חשוב לעברית */
-        }
-        .pasuk {
-            display: inline; /* ישארו בתוך זרימת הטקסט */
-        }
-
-        /* סגנון למספר הפסוק שישב יפה בתחילת הפסוק, אך עדיין יהיה חלק מהשורה */
-        .verse-num {
-            display: inline-block; /* נותן לו מאפייני בלוק מוגבלים בתוך השורה */
-            margin-left: 0.5em; /* רווח קטן אחרי מספר הפסוק */
-        }
-        
-        /* וודא שהטקסט בתוך הפסוק מיושר היטב */
-        .text-with, .text-without {
-            display: inline; /* חשוב לשמור על זרימה */
-        }
-
-        /* סגנון עבור מעבר השורה שנוצר על ידי התו '@' */
-        .text-content .line-break {
-            display: block; /* האלמנט הזה ייצור מעבר שורה אמיתי */
-            width: 100%; /* יתפוס את כל הרוחב הזמין */
-            height: 0; /* ללא גובה משלו, רק שובר שורה */
-            margin: 0;
-            padding: 0;
-        }
-
-        /* סגנון עבור הרווח הקטן שנוצר על ידי התו '&' - כעת "רוחב שורה" */
-        .text-content .small-space {
-            display: inline-block; /* ישמור על עצמו כאלמנט עם רוחב קבוע */
-            /* רוחב מותאם כדי ליצור אפקט של 'רוחב שורה' ריק חלקית, כמו במגילה. */
-            /* זהו ערך התחלתי, ייתכן שיהיה צורך לכוונון מדויק לפי הפונט והגודל הספציפיים. */
-            width: 8em; /* הגדלנו את הרוחב באופן משמעותי - ניתן לכוונן לפי הצורך */
-            min-width: 0.5em; /* כדי לא להיעלם במידה ואין מקום */
-            max-width: 100%; /* שלא יגלוש מעבר לשורה */
-            vertical-align: middle;
-            text-align: left; /* כדי שהרווח יהיה צמוד לימין אם הוא מתחיל שורה */
-            white-space: pre; /* ודא שהרווח נשמר */
-        }
-
-        /* התאמה למכשירים קטנים - לחצנים בתחתית */
-        @media (max-width: 768px) {
-            .bottom-nav-btns {
-                position: static; /* יחזור לזרימה רגילה בדף */
-                display: flex; /* כדי להבטיח שהלחצנים אחד ליד השני */
-                justify-content: space-between;
-                padding: 10px;
-                background: var(--background-color); /* או כל צבע רקע אחר */
-                margin-top: 10px; /* רווח קטן מהתוכן מעליו */
-            }
-            .floating-controls {
-                position: static; /* יחזור לזרימה רגילה */
-                text-align: center;
-                margin-top: 10px;
-                padding-bottom: 10px; /* רווח תחתון לפני סרגל הנגן */
-            }
-            /* וודא שלחצני הניווט הקטנים לא יתנגשו */
-            .bottom-nav-btns .nav-btn {
-                flex: 1; /* יתפוס מקום באופן שווה */
-                margin: 0 5px; /* רווח קטן ביניהם */
-                max-width: calc(50% - 10px); /* מגבלה כדי שלא יהיו רחבים מדי */
-            }
-        }
-        /* --- סוף תוספות CSS --- */
-
     </style>
 </head>
 <body>
@@ -125,14 +54,14 @@
             <div class="text-content" id="textContentArea"></div>
         </div>
     </main>
-    <!-- הלחצנים התחתונים הוזזו למיקום חדש ב-CSS למסכים קטנים -->
     <div class="bottom-nav-btns" id="bottomNav"></div>
-    <div class="floating-controls" id="floatingControls">
-        <button class="f-btn" id="mainCycleBtn" onclick="cycleDisplayMode()">לתצוגה ללא ניקוד וטעמים</button>
-    </div>
 </div>
 
-<audio id="megillahAudio" ontimeupdate="syncText()" onended="handleChapterEnd()"></audio>
+<div class="floating-controls" id="floatingControls">
+    <button class="f-btn" id="mainCycleBtn" onclick="cycleDisplayMode()">לתצוגה ללא ניקוד וטעמים</button>
+</div>
+
+<audio id="megillahAudio" ontimeupdate="syncText()"></audio>
 
 <div class="bottom-player-bar" id="playerBar">
     <!-- פס התקדמות קריאה שיושב בדיוק על הגבול העליון של הסרגל -->
@@ -217,8 +146,7 @@
             let currentChapWords = 0;
             if (!megillahData[c]) continue;
             megillahData[c].forEach(p => {
-                // נספור מילים תוך התעלמות מתווי ה-@ ו-& עבור חישוב ההתקדמות בלבד
-                let cleanText = p.t.replace(/^(\([\u05D0-\u05EA]{1,3}\))/, '').replace(/@/g, ' ').replace(/&/g, ' ');
+                let cleanText = p.t.replace(/^(\([\u05D0-\u05EA]{1,3}\))/, '');
                 let wordsCount = cleanText.trim().split(/\s+/).length;
                 chapWordCounts[c].pesukim.push(wordsCount);
                 currentChapWords += wordsCount;
@@ -231,24 +159,13 @@
     function getActivePasukIndex() {
         let pesukim = document.querySelectorAll('.pasuk');
         if (pesukim.length === 0) return 0;
-        
-        // נחפש את האלמנט עם הקלאס 'playing-now' וננסה למצוא את ה-dataset.index שלו.
-        const playingPasuk = document.querySelector('.pasuk.playing-now');
-        if (playingPasuk) {
-            return parseInt(playingPasuk.dataset.index) || 0;
-        }
-
-        // אם אין פסוק מודגש, נחפש את הפסוק שהתחיל הקריאה לאחרונה על סמך זמן השמע.
-        const data = megillahData[currentChapter] || [];
-        let activeIdx = 0;
-        for (let i = 0; i < data.length; i++) {
-            if (audio.currentTime >= data[i].time) {
-                activeIdx = i;
-            } else {
-                break; // אם עברנו את הזמן, אין צורך להמשיך לחפש
+        for (let p of pesukim) {
+            let rect = p.getBoundingClientRect();
+            if (rect.bottom > 120) {
+                return parseInt(p.dataset.index) || 0;
             }
         }
-        return activeIdx;
+        return pesukim.length - 1;
     }
 
     // מחשב כמה מילים נקראו במצטבר מתחילת פרק א'
@@ -291,20 +208,7 @@
         }
     });
 
-    // --- לוגיקה חדשה: טיפול בסיום פרק אוטומטית ---
-    function handleChapterEnd() {
-        if (scrollMode === 1 && currentChapter < 10) { // אם הגלילה אוטומטית וזה לא הפרק האחרון
-            loadChapter(currentChapter + 1); // טען את הפרק הבא
-            audio.play(); // והתחל לנגן אותו אוטומטית
-        } else if (currentChapter === 10) {
-            audio.pause(); // סיים את הניגון אם זה הפרק האחרון
-            // אולי תרצה להוסיף כאן הודעה שהמגילה הסתיימה
-        }
-    }
-    // קשר את הפונקציה לאירוע onended של האודיו
-    audio.onended = handleChapterEnd;
-    // --- סוף לוגיקה חדשה ---
-
+    // === סוף קוד התקדמות ===
 
     function initSensorsOnFirstTouch() {
         if (sensorsInitialized) return;
@@ -462,12 +366,7 @@
         document.querySelectorAll('.chapter-btn').forEach((b, i) => b.classList.toggle('active', i+1 === num));
         applyLayout(); updateBottomNav();
         audio.src = `./audio/chap${num}.mp3`;
-        // נתחיל את הנגינה רק אם הגלילה האוטומטית פעילה
-        if (scrollMode === 1) {
-            audio.oncanplaythrough = () => audio.play().catch(e => console.error("Audio play failed:", e));
-        } else {
-            audio.oncanplaythrough = () => audio.playbackRate = currentPlaybackRate;
-        }
+        audio.oncanplaythrough = () => audio.playbackRate = currentPlaybackRate;
         window.scrollTo({ top: 0, behavior: 'instant' });
         updateProgress(); 
     }
@@ -475,33 +374,12 @@
     function syncText() {
         const data = (typeof megillahData !== 'undefined') ? megillahData[currentChapter] :[];
         let activeIdx = -1;
-        
-        const playingPasuk = document.querySelector('.pasuk.playing-now');
-        if (playingPasuk) {
-            activeIdx = parseInt(playingPasuk.dataset.index) || 0;
-        }
-
-        if (activeIdx === -1 || !playingPasuk) {
-            for (let i = 0; i < data.length; i++) {
-                if (audio.currentTime >= data[i].time) {
-                    activeIdx = i;
-                } else {
-                    break;
-                }
-            }
-        }
-
-
+        for (let i = 0; i < data.length; i++) { if (audio.currentTime >= data[i].time) activeIdx = i; }
         document.querySelectorAll('.pasuk').forEach(p => p.classList.remove('playing-now'));
         const activeSpans = document.querySelectorAll(`.pasuk[data-index="${activeIdx}"]`);
         if(activeSpans.length > 0) {
             activeSpans.forEach(s => s.classList.add('playing-now'));
-            
-            if(scrollMode === 1) {
-                const firstActiveSpan = activeSpans[0];
-                const rect = firstActiveSpan.getBoundingClientRect();
-                window.scrollTo({ top: rect.top + window.scrollY - (window.innerHeight / 3), behavior: 'smooth' }); 
-            }
+            if(scrollMode === 1) window.scrollTo({ top: activeSpans[0].getBoundingClientRect().top + window.scrollY - 150, behavior: 'smooth' });
         }
         updateProgress();
     }
@@ -514,20 +392,13 @@
         if (isChumashMode) size += 0.15; 
         area.style.fontSize = size + 'rem';
 
-        area.style.textAlign = 'justify';
-        area.style.wordBreak = 'break-word'; 
-
         dataWithNikkud.forEach((item, idx) => {
             const span = document.createElement('span');
-            span.className = 'pasuk'; 
-            span.dataset.index = idx;
+            span.className = 'pasuk'; span.dataset.index = idx;
             span.onclick = () => { audio.currentTime = item.time; audio.play(); };
 
             let textWithNikkud = highlightKamatzKatan(item.t, currentChapter, idx);
             textWithNikkud = insertGraggers(textWithNikkud);
-
-            textWithNikkud = textWithNikkud.replace(/@/g, '<span class="line-break"></span>');
-            textWithNikkud = textWithNikkud.replace(/&/g, '<span class="small-space"></span>');
 
             let verseMatch = textWithNikkud.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
             let verseHtml = verseMatch ? `<span class="verse-num">${verseMatch[1]}</span>` : '';
@@ -536,9 +407,6 @@
             let withoutContent = '';
             if (dataNoNikkud[idx] && dataNoNikkud[idx].t) {
                 let noNikkudText = insertGraggers(dataNoNikkud[idx].t);
-                noNikkudText = noNikkudText.replace(/@/g, '<span class="line-break"></span>');
-                noNikkudText = noNikkudText.replace(/&/g, '<span class="small-space"></span>');
-
                 let vMatch2 = noNikkudText.match(/^(\([\u05D0-\u05EA]{1,3}\))/);
                 withoutContent = vMatch2 ? noNikkudText.replace(vMatch2[1], '') : noNikkudText;
             }
@@ -602,27 +470,8 @@
         document.getElementById('bottomNav').innerHTML = `<button class="nav-btn" ${currentChapter===1?'disabled':''} onclick="loadChapter(${currentChapter-1})">פרק הקודם</button><button class="nav-btn" ${currentChapter===10?'disabled':''} onclick="loadChapter(${currentChapter+1})">פרק הבא</button>`;
     }
 
-    function changeFontSize(d) { 
-        currentFontSize = Math.max(1.2, currentFontSize + (d * 0.15)); 
-        // ניסיון לדחוס יותר מילים: אם הפונט גדול, נקטין את ה-line-height.
-        // זהו טוויק עדין ודורש בדיקה.
-        document.getElementById('textContentArea').style.lineHeight = (currentFontSize > 2.0) ? '1.5' : '1.8';
-        applyLayout(); 
-    }
-    
-    function cycleScrollMode() { 
-        scrollMode = (scrollMode + 1) % 2; 
-        const btn = document.getElementById('scrollCycleBtn'); 
-        btn.innerText = scrollMode===0?"לגלילה אוטומטית":"לגלילה ידנית"; 
-        btn.style.background = scrollMode===1?"var(--accent-color)":"rgba(255,255,255,0.1)"; 
-        btn.style.color = scrollMode===1?"var(--primary-color)":"white"; 
-        
-        // אם עבר למצב גלילה אוטומטית, נתחיל לנגן אם לא מנגן
-        if (scrollMode === 1 && audio.paused) {
-            audio.play().catch(e => console.error("Audio play failed on scrollMode change:", e));
-        }
-    }
-
+    function changeFontSize(d) { currentFontSize = Math.max(1.2, currentFontSize + (d * 0.15)); applyLayout(); }
+    function cycleScrollMode() { scrollMode = (scrollMode + 1) % 2; const btn = document.getElementById('scrollCycleBtn'); btn.innerText = scrollMode===0?"לגלילה אוטומטית":"לגלילה ידנית"; btn.style.background = scrollMode===1?"var(--accent-color)":"rgba(255,255,255,0.1)"; btn.style.color = scrollMode===1?"var(--primary-color)":"white"; }
     function toggleSpeed() { currentSpeedIdx = (currentSpeedIdx + 1) % playSpeeds.length; currentPlaybackRate = playSpeeds[currentSpeedIdx]; audio.playbackRate = currentPlaybackRate; document.getElementById('speedBtn').innerText = '⏱ ' + currentPlaybackRate + 'x'; }
     function togglePlayPause() { audio.paused ? audio.play() : audio.pause(); }
     
